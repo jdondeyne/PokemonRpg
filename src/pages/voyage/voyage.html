@@ -1,0 +1,37 @@
+<!--
+  Generated template for the Voyage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>Voyage</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <div *ngFor="let lieu of lieux; let index = index; let even = even">
+	  <ion-row class="row" *ngIf="even">
+	  	<ion-col class="col">
+		  <ion-card (click)="goToLieu(lieux[index])">
+		    <img src="assets/imgs/{{lieux[index].img}}.jpg"/>
+		    <div class="card-title">{{lieux[index].nom}}</div>
+		    <div class="card-subtitle"></div>
+		  </ion-card>
+		</ion-col>
+		<ion-col class="col" *ngIf="lieux[index+1]!=null">
+		  <ion-card (click)="goToLieu(lieux[index+1])">
+		    <img src="assets/imgs/{{lieux[index+1].img}}.jpg"/>
+		    <div class="card-title">{{lieux[index+1].nom}}</div>
+		    <div class="card-subtitle"></div>
+		  </ion-card>
+		</ion-col>
+	  </ion-row>
+  </div>	
+
+</ion-content>

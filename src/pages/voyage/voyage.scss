@@ -1,0 +1,29 @@
+page-voyage {
+  ion-card {
+    position: relative;
+    text-align: center;
+    height:117px;
+  }
+
+  ion-card img{
+  	height:117px;
+  }
+
+  .card-title {
+    position: absolute;
+    top: 36%;
+    font-size: 5.0vw;
+    width: 100%;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .card-subtitle {
+    font-size: 2.5vw;
+    position: absolute;
+    top: 65%;
+    width: 100%;
+    color: #fff;
+  }
+}
+

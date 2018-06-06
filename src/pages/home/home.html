@@ -1,0 +1,24 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Accueil</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <h1 text-center>Pkm RPG</h1>
+  <div text-center>
+    <img style="height: 50vh !important;width: auto !important;" src="assets/imgs/logo.png"/>
+  </div>
+
+  <button ion-button full (click)="startNewGame()">Nouvelle partie</button>
+  <button ion-button full color="secondary" (click)="continueGame()" *ngIf="isStarted==true">Continuer</button>
+  <!-- dev options -->
+  <button ion-button full (click)="goToCombatPage()">Combat</button>
+  <button ion-button full (click)="goToVoyagePage()">Voyage</button>
+  <button ion-button full (click)="goToOptionsPage()">Options</button>
+
+
+</ion-content>

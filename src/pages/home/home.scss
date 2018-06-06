@@ -1,0 +1,38 @@
+page-home {
+
+}
+
+.range-md.range-disabled .range-bar-active {
+    background-color: green;
+}
+
+.range-md .range-bar {
+	height: 3px;
+}
+
+.range-md .range-bar .range-bar-active {
+	height: 3px;
+}
+
+.range-md {
+    padding: 0px;
+    height: 20px;
+}
+
+.pokemon {
+	position: relative;
+	top: 0;
+	left: 0;
+	height: 16vh !important;
+	width: auto !important;
+}
+
+.effect {
+	position: absolute;
+	top: 60px;
+	left: 60px;
+	opacity: 0.5;
+	height: 22vh !important;
+	width: auto !important;
+}
+

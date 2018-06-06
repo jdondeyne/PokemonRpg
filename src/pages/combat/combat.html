@@ -1,0 +1,92 @@
+<!-- <ion-header>
+
+  <ion-navbar>
+    <ion-title>Combat</ion-title>
+  </ion-navbar>
+
+</ion-header> -->
+
+
+<ion-content padding>
+
+  <ion-row class="row">
+    <ion-col class="col" offset-6>
+      <ion-row class="row">
+        <ion-col class="col" text-left>{{enemyAttackingPkm.pkm.nom}}</ion-col>
+        <ion-col class="col" text-right>lvl {{enemyAttackingPkm.lvl}}</ion-col>
+      </ion-row>
+        <ion-range [(ngModel)]="enemyAttackingPkm.pv.value" [max]="enemyAttackingPkm.pv.max" (ionChange)="checkDeath($event,'bot')" disabled>
+          <ion-icon range-left small name=""></ion-icon>
+          <ion-icon range-right name=""></ion-icon>
+        </ion-range>
+        <ion-row class="row">
+         <ion-col class="col" text-right>{{enemyAttackingPkm.pv.value}}/{{enemyAttackingPkm.pv.max}}</ion-col>
+        </ion-row>
+      <div text-center>
+        <img class="pokemon" src="assets/imgs/{{enemyAttackingPkm.pkm.imgFront}}.png_"/>
+        <img *ngIf="imgEffetEnemy != ''" class="effect" src="assets/imgs/{{imgEffetEnemy}}.gif"/>
+      </div>
+    </ion-col>
+  </ion-row>
+
+  <ion-row class="row">
+    <ion-col class="col">
+      <ion-row class="row">
+        <ion-col class="col" text-left>{{myAttackingPkm.pkm.nom}}</ion-col>
+        <ion-col class="col" text-right>lvl {{myAttackingPkm.lvl}}</ion-col>
+      </ion-row>
+        <ion-range [(ngModel)]="myAttackingPkm.pv.value" [max]="myAttackingPkm.pv.max" (ionChange)="checkDeath($event,'joueur')" disabled>
+          <ion-icon range-left small name=""></ion-icon>
+          <ion-icon range-right name=""></ion-icon>
+        </ion-range>
+        <ion-row class="row">
+         <ion-col class="col" text-right>{{myAttackingPkm.pv.value}}/{{myAttackingPkm.pv.max}}</ion-col>
+        </ion-row>
+      <div text-center>
+        <img class="pokemon" src="assets/imgs/{{myAttackingPkm.pkm.imgBack}}.png_" />
+        <img *ngIf="imgEffet != ''" class="effect" src="assets/imgs/{{imgEffet}}.gif"/>
+      </div>
+    </ion-col>
+    <ion-col class="col"></ion-col>
+  </ion-row>
+</ion-content >
+
+<ion-footer>
+
+  <ion-card style="min-height: 50px; max-height: 50px;">
+    <ion-card-content>
+      {{message}}
+    </ion-card-content>
+  </ion-card>
+
+  <div [hidden]="!attackPanel" *ngFor="let move of myAttackingPkm.pkm.moveList; let index = index; let even = even">
+    <ion-row class="row" *ngIf="even">
+      <ion-col class="col">
+        <button ion-button full (click)="useAttack(myAttackingPkm.pkm.moveList[index])" [disabled]="isAttacking">{{myAttackingPkm.pkm.moveList[index].nom}}</button>
+      </ion-col>
+     <ion-col class="col">
+      <button ion-button full (click)="useAttack(myAttackingPkm.pkm.moveList[index+1])" [disabled]="isAttacking">{{myAttackingPkm.pkm.moveList[index+1].nom}}</button>
+      </ion-col>
+    </ion-row>
+  </div>
+
+  <div [hidden]="attackPanel">
+    <ion-row class="row">
+      <ion-col class="col">
+        <button ion-button full (click)="attack()" [disabled]="isAttacking">Attaquer</button>
+      </ion-col>
+      <ion-col class="col">
+        <button ion-button full (click)="switchPkm('switch')" [disabled]="isAttacking">Pkm</button>
+      </ion-col>
+    </ion-row>
+    <ion-row class="row">
+      <ion-col class="col">
+        <button ion-button full (click)="useItem()" [disabled]="isAttacking">Objet</button>
+      </ion-col>
+      <ion-col class="col">
+        <button ion-button full (click)="run()" [disabled]="isAttacking">Fuir</button>
+      </ion-col>
+    </ion-row>
+  </div>
+  
+</ion-footer>
