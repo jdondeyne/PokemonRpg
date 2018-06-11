@@ -18,7 +18,7 @@
   <div *ngFor="let lieu of lieux; let index = index; let even = even">
 	  <ion-row class="row" *ngIf="even">
 	  	<ion-col class="col">
-		  <ion-card (click)="goToLieu(lieux[index])">
+		  <ion-card (click)="goToLieu(lieux[index])" style="background: rgba(0,0,0,0);">
 		    <img src="assets/imgs/{{lieux[index].img}}.jpg"/>
 		    <div class="card-title">{{lieux[index].nom}}</div>
 		    <div class="card-subtitle"></div>

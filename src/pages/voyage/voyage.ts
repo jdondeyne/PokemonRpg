@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { NavController, NavParams, ToastController } from 'ionic-angular';
+import { Storage } from '@ionic/storage';
 
 import { CombatPage } from '../../pages/combat/combat';
 
@@ -10,9 +11,8 @@ import { CombatPage } from '../../pages/combat/combat';
 export class VoyagePage {
 
   lieux: any;
-  pkmSauvage: any;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(public navCtrl: NavController, public navParams: NavParams, public storage: Storage, private toastCtrl: ToastController) {
 
   	this.lieux = [
       {
@@ -62,10 +62,10 @@ export class VoyagePage {
       }
     ]
 
-    this.pkmSauvage = {};
   }
 
   goToLieu(lieu){
+    console.log("Entrée dans... " + lieu.nom);
 
     let randomNb: any;
     randomNb = Math.floor((Math.random() * 100) + 1);
@@ -73,13 +73,9 @@ export class VoyagePage {
     if(randomNb < 60){
       //Cas rencontre PKM sauvage
       console.log(randomNb + "/100 - Pokemon sauvage!");
-      switch (lieu.id) {
+      /*switch (lieu.id) {
         case 1:
             console.log("Un Roucool sauvage apparait!");
-            this.pkmSauvage.pkm = "Roucool";
-            this.pkmSauvage.lvl = 1;
-            this.pkmSauvage.pv = {};
-            this.pkmSauvage.pv.max  = 150;
             break;
         case 2:
             console.log("Un Chenipan sauvage apparait!");
@@ -87,30 +83,49 @@ export class VoyagePage {
         default:
           console.log("Lieu inconnu");
           break;
-      }
-
+      }*/
+      
       this.navCtrl.push(CombatPage, {
         type: 'sauvage',
-        pokemon: this.pkmSauvage
+        lieu: lieu.id
       });
 
     }
     if(randomNb >= 60 && randomNb < 75){
       //Cas trouve objet
       console.log(randomNb + "/100 - Vous trouvez un objet!");
+      this.presentToast('Vous trouvez un objet!');
 
     }
     if(randomNb >= 75 && randomNb < 90){
       //Cas rencontre Team Rocket
       console.log(randomNb+ "/100 - La team Rocket vous défie!");
+      this.navCtrl.push(CombatPage, {
+        type: 'rocket',
+        lieu: lieu.id
+      });
 
     }
     if(randomNb >= 90){
       //Cas rencontre Rival
       console.log(randomNb+ "/100 - Votre Rival vous défie!");
+      this.navCtrl.push(CombatPage, {
+        type: 'rival',
+        lieu: lieu.id
+      });
 
     }
 
+  }
+
+
+  presentToast(texte){
+      let toast = this.toastCtrl.create({
+        message: texte,
+        duration: 3000,
+        position: 'bottom'
+      });
+      toast.present();
   }
 
 }
