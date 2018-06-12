@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { NavController, AlertController } from 'ionic-angular';
+import { NavController, AlertController, LoadingController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
 
 import { CombatPage } from '../../pages/combat/combat';
 import { VoyagePage } from '../../pages/voyage/voyage';
+import { StarterPage } from '../../pages/starter/starter';
 
 @Component({
   selector: 'page-home',
@@ -16,7 +17,13 @@ export class HomePage {
   itemList: any = {}; 
 
 
-  constructor(public navCtrl: NavController, private alertCtrl: AlertController, public storage: Storage) {
+  constructor(public navCtrl: NavController, private alertCtrl: AlertController, public storage: Storage, public loadingCtrl: LoadingController) {
+
+    let loading = this.loadingCtrl.create({
+      content: 'Création BDD Pkm...'
+    });
+    loading.present();
+
   	this.isStarted = false;
 
   	//Verifier que le jeu a déja été lancé 1 fois
@@ -26,6 +33,7 @@ export class HomePage {
   			this.creerBDDPkm();
   			this.creerBDDItem();
   		}
+  		loading.dismiss();
   	 });
 
   	//Verifier qu'on a déja une sauvegarde
@@ -103,8 +111,8 @@ export class HomePage {
 	      {
 	        nom: 'Charge',
 	        type: 'Normal',
-	        degats: 10,
-	        precision: 80
+	        degats: 40,
+	        precision: 100
 	      },
 	      {
 	        nom: 'Rugissement',
@@ -116,13 +124,13 @@ export class HomePage {
 	      {
 	        nom: 'Fouet-lianne',
 	        type: 'Plante',
-	        degats: 20,
+	        degats: 50,
 	        precision: 70
 	      },
 	      {
 	        nom: 'Tranch\'herbe',
 	        type: 'Plante',
-	        degats: 30,
+	        degats: 70,
 	        precision: 60
 	      }
 	    ]
@@ -140,8 +148,8 @@ export class HomePage {
 	      {
 	        nom: 'Griffe',
 	        type: 'Normal',
-	        degats: 10,
-	        precision: 80
+	        degats: 40,
+	        precision: 90
 	      },
 	      {
 	        nom: 'Mimi-queue',
@@ -153,15 +161,17 @@ export class HomePage {
 	      {
 	        nom: 'Flamèche',
 	        type: 'Feu',
-	        degats: 30,
-	        precision: 70,
+	        degats: 50,
+	        precision: 80,
+	        effet: 'Brulure'
 	        img: 'feu'
 	      },
 	      {
 	        nom: 'Brouillard',
 	        type: 'Poison',
 	        degats: 0,
-	        precision: 100
+	        precision: 100,
+	        effet: 'Précision-'
 	      }
 	    ]
       },
@@ -178,8 +188,8 @@ export class HomePage {
 	      {
 	        nom: 'Charge',
 	        type: 'Normal',
-	        degats: 10,
-	        precision: 80
+	        degats: 40,
+	        precision: 100
 	      },
 	      {
 	        nom: 'Mimi-queue',
@@ -191,16 +201,16 @@ export class HomePage {
 	      {
 	        nom: 'Ecume',
 	        type: 'Eau',
-	        degats: 15,
-	        precision: 70,
+	        degats: 35,
+	        precision: 90,
 	        effet: 'Defense-',
 	        img: 'eau'
 	      },
 	      {
 	        nom: 'Pistolet à eau',
 	        type: 'Eau',
-	        degats: 30,
-	        precision: 70,
+	        degats: 60,
+	        precision: 80,
 	        img: 'eau'
 	      }
 	    ]
@@ -218,8 +228,8 @@ export class HomePage {
 	      {
 	        nom: 'Charge',
 	        type: 'Normal',
-	        degats: 10,
-	        precision: 80
+	        degats: 40,
+	        precision: 100
 	      },
 	      {
 	        nom: 'Jet de Sable',
@@ -231,14 +241,14 @@ export class HomePage {
 	      {
 	        nom: 'Tornade',
 	        type: 'Vol',
-	        degats: 40,
-	        precision: 100,
+	        degats: 60,
+	        precision: 90,
 	        img: ''
 	      },
 	      {
 	        nom: 'Vive-Attaque',
 	        type: 'Normal',
-	        degats: 40,
+	        degats: 30,
 	        precision: 100,
 	        img: ''
 	      }
@@ -257,8 +267,8 @@ export class HomePage {
 	      {
 	        nom: 'Charge',
 	        type: 'Normal',
-	        degats: 10,
-	        precision: 80
+	        degats: 40,
+	        precision: 100
 	      },
 	      {
 	        nom: 'Mimi-queue',
@@ -285,6 +295,48 @@ export class HomePage {
 	    ]
       },
       {
+      	id: 23,
+        nom: 'Abo',
+        type1: 'Poison',
+        type2: '',
+        tauxCapture: 255,
+        imgFront: 'Sprite_6_x_023',
+        imgBack: 'Sprite_6_dos_023',
+        evolLvl: 22,
+        moveList: [
+	      {
+	        nom: 'Ligotage',
+	        type: 'Normal',
+	        degats: 15,
+	        precision: 90,
+	        effet: 'Repetition'
+	      },
+	      {
+	        nom: 'Groz\'Yeux',
+	        type: 'Normal',
+	        degats: 0,
+	        precision: 100,
+	        effet: 'Defense-'
+	      },
+	      {
+	        nom: 'Dard-venin',
+	        type: 'Poison',
+	        degats: 15,
+	        precision: 100,
+	        effet: 'Empoisonné',
+	        img: ''
+	      },
+	      {
+	        nom: 'Morsure',
+	        type: 'Ténèbres',
+	        degats: 60,
+	        precision: 100,
+	        effet: 'Peur',
+	        img: ''
+	      }
+	    ]
+      },
+      {
       	id: 25,
         nom: 'Pikachu',
         type1: 'Electrik',
@@ -297,8 +349,8 @@ export class HomePage {
 	      {
 	        nom: 'Charge',
 	        type: 'Normal',
-	        degats: 10,
-	        precision: 80
+	        degats: 40,
+	        precision: 100
 	      },
 	      {
 	        nom: 'Mimi-queue',
@@ -310,8 +362,8 @@ export class HomePage {
 	      {
 	        nom: 'Eclair',
 	        type: 'Electrik',
-	        degats: 20,
-	        precision: 70,
+	        degats: 60,
+	        precision: 80,
 	        effet: 'Paralysie',
 	        img: 'foudre'
 	      },
@@ -324,7 +376,90 @@ export class HomePage {
 	        img: 'foudre'
 	      }
 	    ]
-      }
+      },
+      {
+      	id: 41,
+        nom: 'Nosferapti',
+        type1: 'Poison',
+        type2: 'Vol',
+        tauxCapture: 255,
+        imgFront: 'Sprite_6_x_041',
+        imgBack: 'Sprite_6_dos_041',
+        evolLvl: 22,
+        moveList: [
+	      {
+	        nom: 'Vampirisme',
+	        type: 'Inscecte',
+	        degats: 80,
+	        precision: 100,
+	        effet: 'Soin',
+	      },
+	      {
+	        nom: 'Ultrason',
+	        type: 'Normal',
+	        degats: 0,
+	        precision: 55,
+	        effet: 'Confusion'
+	      },
+	      {
+	        nom: 'Etonnement',
+	        type: 'Spectre',
+	        degats: 30,
+	        precision: 100,
+	        effet: 'Peur',
+	        img: ''
+	      },
+	      {
+	        nom: 'Morsure',
+	        type: 'Ténèbres',
+	        degats: 60,
+	        precision: 100,
+	        effet: 'Peur',
+	        img: ''
+	      }
+	    ]
+      },
+      {
+      	id: 109,
+        nom: 'Smogo',
+        type1: 'Poison',
+        type2: '',
+        tauxCapture: 190,
+        imgFront: 'Sprite_6_x_109',
+        imgBack: 'Sprite_6_dos_109',
+        evolLvl: 35,
+        moveList: [
+	      {
+	        nom: 'Gaz Toxik',
+	        type: 'Poison',
+	        degats: 0,
+	        precision: 90,
+	        effet: 'Empoisonné',
+	      },
+	      {
+	        nom: 'Charge',
+	        type: 'Normal',
+	        degats: 40,
+	        precision: 100
+	      },
+	      {
+	        nom: 'Purédpois',
+	        type: 'Poison',
+	        degats: 30,
+	        precision: 70,
+	        effet: 'Empoisonné',
+	        img: ''
+	      },
+	      {
+	        nom: 'Brouillard',
+	        type: 'Normal',
+	        degats: 0,
+	        precision: 100,
+	        effet: 'Précision-',
+	        img: ''
+	      }
+	    ]
+      },
     ]
 
   	this.storage.set('pokemonList', this.pokemonList);
@@ -418,15 +553,17 @@ export class HomePage {
 
     //Creer 6 slots + 1er Pkm
     myPkmTeam = [{},{},{},{},{},{}];
-	myPkmTeam[0].pkm = this.pokemonList[0];
+/*	myPkmTeam[0].pkm = this.pokemonList[0];
 	myPkmTeam[0].lvl = 5;
 	myPkmTeam[0].exp = 0;
 	myPkmTeam[0].pv = {};
 	myPkmTeam[0].pv.value = 100;
-	myPkmTeam[0].pv.max  = 100;
+	myPkmTeam[0].pv.max  = 100;*/
 
     this.storage.set('save.myItemList', myItemList);
     this.storage.set('save.myPkmTeam', myPkmTeam);
+
+    this.navCtrl.push(StarterPage);
 
   }
   	

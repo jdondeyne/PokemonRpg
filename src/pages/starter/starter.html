@@ -1,0 +1,53 @@
+<!--
+  Generated template for the Starter page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>Starter Page</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+	  <h1 text-center>Pr. Chen</h1>
+	  <div text-center>
+	    <img style="height: 50vh !important;width: auto !important;" src="assets/imgs/chen.png"/>
+	  </div>
+	<ion-item [hidden]="!showName" >
+		<ion-label color="primary" stacked>Nom:</ion-label>
+		<ion-input type="text" placeholder="Nom" [(ngModel)]="nom"></ion-input>
+	</ion-item>
+
+	<ion-row [hidden]="!showStarters">
+		<ion-col col-4 (click)="chooseStarter('bulbizarre')">
+			<img style="height: 20vh !important;width: auto !important;" src="assets/imgs/Sprite_6_x_001.png"/>		     
+		</ion-col>
+		<ion-col col-4 (click)="chooseStarter('salameche')">	
+			<img style="height: 20vh !important;width: auto !important;" src="assets/imgs/Sprite_6_x_004.png"/>		     
+		</ion-col>
+		<ion-col col-4 (click)="chooseStarter('carapuce')">
+				<img style="height: 20vh !important;width: auto !important;" src="assets/imgs/Sprite_6_x_007.png"/>			     
+		</ion-col>
+	</ion-row>
+
+	<ion-footer>
+	  <ion-row class="row">
+	    <ion-col col-10>
+	    <ion-card style="min-height: 50px; max-height: 50px;">
+	      <ion-card-content>
+	        {{message}}
+	      </ion-card-content>
+	    </ion-card>
+	    </ion-col>
+	    <ion-col col-2>
+	      <button [hidden]="!hasFinished" ion-button large icon-left (click)="next()" ><ion-icon name="arrow-next"></ion-icon></button>
+	    </ion-col>
+	  </ion-row>
+	  
+	</ion-footer>
+</ion-content>

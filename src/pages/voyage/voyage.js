@@ -8,14 +8,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { NavController, NavParams, ToastController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
 import { CombatPage } from '../../pages/combat/combat';
 var VoyagePage = /** @class */ (function () {
-    function VoyagePage(navCtrl, navParams, storage) {
+    function VoyagePage(navCtrl, navParams, storage, toastCtrl) {
         this.navCtrl = navCtrl;
         this.navParams = navParams;
         this.storage = storage;
+        this.toastCtrl = toastCtrl;
         this.lieux = [
             {
                 id: 1,
@@ -63,53 +64,66 @@ var VoyagePage = /** @class */ (function () {
                 img: 'lac'
             }
         ];
-        this.pkmSauvage = {};
     }
     VoyagePage.prototype.goToLieu = function (lieu) {
+        console.log("Entrée dans... " + lieu.nom);
         var randomNb;
         randomNb = Math.floor((Math.random() * 100) + 1);
         if (randomNb < 60) {
             //Cas rencontre PKM sauvage
             console.log(randomNb + "/100 - Pokemon sauvage!");
-            switch (lieu.id) {
-                case 1:
-                    console.log("Un Roucool sauvage apparait!");
-                    this.pkmSauvage.pkm = "Roucool";
-                    this.pkmSauvage.lvl = 1;
-                    this.pkmSauvage.pv = {};
-                    this.pkmSauvage.pv.max = 150;
-                    break;
-                case 2:
-                    console.log("Un Chenipan sauvage apparait!");
-                    break;
-                default:
-                    console.log("Lieu inconnu");
-                    break;
-            }
+            /*switch (lieu.id) {
+              case 1:
+                  console.log("Un Roucool sauvage apparait!");
+                  break;
+              case 2:
+                  console.log("Un Chenipan sauvage apparait!");
+                  break;
+              default:
+                console.log("Lieu inconnu");
+                break;
+            }*/
             this.navCtrl.push(CombatPage, {
                 type: 'sauvage',
-                pokemon: this.pkmSauvage
+                lieu: lieu.id
             });
         }
         if (randomNb >= 60 && randomNb < 75) {
             //Cas trouve objet
             console.log(randomNb + "/100 - Vous trouvez un objet!");
+            this.presentToast('Vous trouvez un objet!');
         }
         if (randomNb >= 75 && randomNb < 90) {
             //Cas rencontre Team Rocket
             console.log(randomNb + "/100 - La team Rocket vous défie!");
+            this.navCtrl.push(CombatPage, {
+                type: 'rocket',
+                lieu: lieu.id
+            });
         }
         if (randomNb >= 90) {
             //Cas rencontre Rival
             console.log(randomNb + "/100 - Votre Rival vous défie!");
+            this.navCtrl.push(CombatPage, {
+                type: 'rival',
+                lieu: lieu.id
+            });
         }
+    };
+    VoyagePage.prototype.presentToast = function (texte) {
+        var toast = this.toastCtrl.create({
+            message: texte,
+            duration: 3000,
+            position: 'bottom'
+        });
+        toast.present();
     };
     VoyagePage = __decorate([
         Component({
             selector: 'page-voyage',
             templateUrl: 'voyage.html',
         }),
-        __metadata("design:paramtypes", [NavController, NavParams, Storage])
+        __metadata("design:paramtypes", [NavController, NavParams, Storage, ToastController])
     ], VoyagePage);
     return VoyagePage;
 }());

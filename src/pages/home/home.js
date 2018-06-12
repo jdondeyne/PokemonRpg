@@ -8,26 +8,44 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { NavController, AlertController } from 'ionic-angular';
+import { NavController, AlertController, LoadingController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
 import { CombatPage } from '../../pages/combat/combat';
 import { VoyagePage } from '../../pages/voyage/voyage';
+import { StarterPage } from '../../pages/starter/starter';
 var HomePage = /** @class */ (function () {
-    function HomePage(navCtrl, alertCtrl, storage) {
+    function HomePage(navCtrl, alertCtrl, storage, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
         this.alertCtrl = alertCtrl;
         this.storage = storage;
+        this.loadingCtrl = loadingCtrl;
+        this.pokemonList = {};
+        this.itemList = {};
+        var loading = this.loadingCtrl.create({
+            content: 'Création BDD Pkm...'
+        });
+        loading.present();
         this.isStarted = false;
+        //Verifier que le jeu a déja été lancé 1 fois
         this.storage.get('pokemonList').then(function (val) {
             console.log(val);
             if (val == null) {
                 _this.creerBDDPkm();
                 _this.creerBDDItem();
             }
+            loading.dismiss();
+        });
+        //Verifier qu'on a déja une sauvegarde
+        this.storage.get('save.myPkmTeam').then(function (val) {
+            console.log(val);
+            if (val != null) {
+                _this.isStarted = true;
+            }
         });
     }
     HomePage.prototype.startNewGame = function () {
+        var _this = this;
         if (this.isStarted == true) {
             var alert_1 = this.alertCtrl.create({
                 title: 'Nouvelle partie?',
@@ -42,6 +60,7 @@ var HomePage = /** @class */ (function () {
                         handler: function () {
                             //Ecraser sauvegarde
                             console.log("New game");
+                            _this.createNewGame();
                         }
                     }
                 ]
@@ -51,6 +70,7 @@ var HomePage = /** @class */ (function () {
         else {
             console.log("New game");
             this.isStarted = true;
+            this.createNewGame();
         }
     };
     HomePage.prototype.continueGame = function () {
@@ -66,8 +86,8 @@ var HomePage = /** @class */ (function () {
         console.log("-> Options page");
     };
     HomePage.prototype.creerBDDPkm = function () {
-        var pokemonList = {};
-        pokemonList = [
+        this.pokemonList = {};
+        this.pokemonList = [
             {
                 id: 1,
                 nom: 'Bulbizarre',
@@ -263,6 +283,48 @@ var HomePage = /** @class */ (function () {
                 ]
             },
             {
+                id: 23,
+                nom: 'Abo',
+                type1: 'Poison',
+                type2: '',
+                tauxCapture: 255,
+                imgFront: 'Sprite_6_x_023',
+                imgBack: 'Sprite_6_dos_023',
+                evolLvl: 22,
+                moveList: [
+                    {
+                        nom: 'Ligotage',
+                        type: 'Normal',
+                        degats: 15,
+                        precision: 90,
+                        effet: 'Repetition'
+                    },
+                    {
+                        nom: 'Groz\'Yeux',
+                        type: 'Normal',
+                        degats: 0,
+                        precision: 100,
+                        effet: 'Defense-'
+                    },
+                    {
+                        nom: 'Dard-venin',
+                        type: 'Poison',
+                        degats: 15,
+                        precision: 100,
+                        effet: 'Empoisonné',
+                        img: ''
+                    },
+                    {
+                        nom: 'Morsure',
+                        type: 'Ténèbres',
+                        degats: 60,
+                        precision: 100,
+                        effet: 'Peur',
+                        img: ''
+                    }
+                ]
+            },
+            {
                 id: 25,
                 nom: 'Pikachu',
                 type1: 'Electrik',
@@ -302,13 +364,97 @@ var HomePage = /** @class */ (function () {
                         img: 'foudre'
                     }
                 ]
-            }
+            },
+            {
+                id: 41,
+                nom: 'Nosferapti',
+                type1: 'Poison',
+                type2: 'Vol',
+                tauxCapture: 255,
+                imgFront: 'Sprite_6_x_041',
+                imgBack: 'Sprite_6_dos_041',
+                evolLvl: 22,
+                moveList: [
+                    {
+                        nom: 'Vampirisme',
+                        type: 'Inscecte',
+                        degats: 80,
+                        precision: 100,
+                        effet: 'Soin',
+                    },
+                    {
+                        nom: 'Ultrason',
+                        type: 'Normal',
+                        degats: 0,
+                        precision: 55,
+                        effet: 'Confusion'
+                    },
+                    {
+                        nom: 'Etonnement',
+                        type: 'Spectre',
+                        degats: 30,
+                        precision: 100,
+                        effet: 'Peur',
+                        img: ''
+                    },
+                    {
+                        nom: 'Morsure',
+                        type: 'Ténèbres',
+                        degats: 60,
+                        precision: 100,
+                        effet: 'Peur',
+                        img: ''
+                    }
+                ]
+            },
+            {
+                id: 109,
+                nom: 'Smogo',
+                type1: 'Poison',
+                type2: '',
+                tauxCapture: 190,
+                imgFront: 'Sprite_6_x_109',
+                imgBack: 'Sprite_6_dos_109',
+                evolLvl: 35,
+                moveList: [
+                    {
+                        nom: 'Gaz Toxik',
+                        type: 'Poison',
+                        degats: 0,
+                        precision: 90,
+                        effet: 'Empoisonné',
+                    },
+                    {
+                        nom: 'Charge',
+                        type: 'Normal',
+                        degats: 40,
+                        precision: 100,
+                        effet: 'Defense-'
+                    },
+                    {
+                        nom: 'Purédpois',
+                        type: 'Poison',
+                        degats: 30,
+                        precision: 70,
+                        effet: 'Empoisonné',
+                        img: ''
+                    },
+                    {
+                        nom: 'Brouillard',
+                        type: 'Normal',
+                        degats: 0,
+                        precision: 100,
+                        effet: 'Précision-',
+                        img: ''
+                    }
+                ]
+            },
         ];
-        this.storage.set('pokemonList', pokemonList);
+        this.storage.set('pokemonList', this.pokemonList);
     };
     HomePage.prototype.creerBDDItem = function () {
         this.itemList = {};
-        itemList = [
+        this.itemList = [
             {
                 nom: 'Pokeball',
                 enCombat: true,
@@ -372,7 +518,7 @@ var HomePage = /** @class */ (function () {
                 surSoi: true
             }
         ];
-        this.storage.set('itemList', itemList);
+        this.storage.set('itemList', this.itemList);
     };
     HomePage.prototype.createNewGame = function () {
         var myPkmTeam = {};
@@ -387,14 +533,24 @@ var HomePage = /** @class */ (function () {
                 quantite: 5
             }
         ];
+        //Creer 6 slots + 1er Pkm
+        myPkmTeam = [{}, {}, {}, {}, {}, {}];
+        /*	myPkmTeam[0].pkm = this.pokemonList[0];
+            myPkmTeam[0].lvl = 5;
+            myPkmTeam[0].exp = 0;
+            myPkmTeam[0].pv = {};
+            myPkmTeam[0].pv.value = 100;
+            myPkmTeam[0].pv.max  = 100;*/
         this.storage.set('save.myItemList', myItemList);
+        this.storage.set('save.myPkmTeam', myPkmTeam);
+        this.navCtrl.push(StarterPage);
     };
     HomePage = __decorate([
         Component({
             selector: 'page-home',
             templateUrl: 'home.html'
         }),
-        __metadata("design:paramtypes", [NavController, AlertController, Storage])
+        __metadata("design:paramtypes", [NavController, AlertController, Storage, LoadingController])
     ], HomePage);
     return HomePage;
 }());

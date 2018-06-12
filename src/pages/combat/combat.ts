@@ -52,17 +52,19 @@ export class CombatPage {
   }
 
   ionViewWillEnter(){
+  	this.typeCombat = this.navParams.get('type');
+  	this.idLieu = this.navParams.get('lieu');
+
   	this.storage.get('pokemonList').then((val) => {
   		this.pokemonList = val;
   	});
 
   	this.storage.get('save.myPkmTeam').then((val) => {
   		this.myPkmTeam = val;
-  		this.creerPkmTeam();
+  		this.myAttackingPkm = this.myPkmTeam[0];
+  		this.creerEnemyTeam(this.typeCombat);
   	});
 
-  	this.typeCombat = this.navParams.get('type');
-  	this.idLieu = this.navParams.get('lieu');
 
   }
 
@@ -155,7 +157,12 @@ export class CombatPage {
 	            	this.myAttackingPkm.pv.value = this.myAttackingPkm.pv.value + 40;
 	                break;
 	            case 'Pokeball':
-	            	this.message = "Vous utilisez " + data.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
+	            	if(this.typeCombat == "sauvage"){
+	            		this.message = "Vous utilisez " + data.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
+	            		data.quantite = data.quantite - 1;
+	            	}else{
+	            		this.message = "Vous ne pouvez pas capturer les pkm des autres dresseurs!";
+	            	}
 	                break;
 	            default:
 	            	console.log("Objet inconnu");
@@ -180,29 +187,15 @@ export class CombatPage {
   }
 
   useAttack(attack){
+
   	console.log(attack);
   	this.message = this.myAttackingPkm.pkm.nom + " utilise " + attack.nom + " !";
   	this.isAttacking = true;
 
-  	let randomNb: any;
-  	randomNb = Math.floor((Math.random() * 100) + 1);
-
+  
   	setTimeout(() => {
 
-	  	if(randomNb <= attack.precision){
-	  		console.log(randomNb + "/" + attack.precision + "- reussi");
-	  		this.message = "C\'est très efficace!";
-	  		this.enemyAttackingPkm.pv.value = this.enemyAttackingPkm.pv.value - attack.degats;
-	  		//--> Tour adverse
-	  	}else{
-	  		console.log(randomNb + "/" + attack.precision + "- raté");
-	  		this.message = this.myAttackingPkm.pkm.nom + " rate sa cible!";
-	  		//--> Tour adverse
-	  	}
-
-	  	//this.isAttacking = false;
-	  	this.attackPanel = false;
-	  	this.imgEffetEnemy = "";
+  		this.resoudreAttaque(attack, this.myAttackingPkm);
 
 	  	//--> Tour adverse
 	  	if(this.estEnVie('bot') == true){
@@ -258,7 +251,7 @@ export class CombatPage {
   }
 
   enemyTurn(){
-	let randomNb, randomNbAtk: any;
+	let randomNbAtk: any;
 	let attack: any;
 	
 
@@ -272,24 +265,9 @@ export class CombatPage {
 			  	this.imgEffet = attack.img;
 			/*  	this.isAttacking = true;*/
 
-			  	randomNb = Math.floor((Math.random() * 100) + 1);
-
 			  	setTimeout(() => {
-
-				  	if(randomNb <= attack.precision){
-				  		console.log(randomNb + "/" + attack.precision + "- reussi");
-				  		this.message = "C\'est très efficace!";
-				  		this.myAttackingPkm.pv.value = this.myAttackingPkm.pv.value - attack.degats;
-				  		//--> Tour adverse
-				  	}else{
-				  		console.log(randomNb + "/" + attack.precision + "- raté");
-				  		this.message = this.enemyAttackingPkm.pkm.nom + " rate sa cible!";
-				  		//--> Tour adverse
-				  	}
-					
-					this.isAttacking = false;
-					this.imgEffet = "";
-				  
+				  	this.resoudreAttaque(attack,this.enemyAttackingPkm);
+				  	this.isAttacking = false;
 
 			  	}, 1000);
 		    }else{
@@ -306,7 +284,7 @@ export class CombatPage {
   	if(event.value <= 0){
   		if(bar == 'joueur'){
   			//Verifier qu'il reste un pkm en vie
-  			let estEnVie = false;
+/*  			let estEnVie = false;
   			for(let i=0; i<this.myPkmTeam.length; i++){
   				if(this.myPkmTeam[i].pkm != null){
 	  				if(this.myPkmTeam[i].pv.value > 0){
@@ -314,12 +292,12 @@ export class CombatPage {
 	  					break;
 	  				}
   				}
-  			}
+  			}*/
 
   			this.message = this.myAttackingPkm.pkm.nom + " est KO!";
 	  		this.isAttacking = true;
 
-  			if(estEnVie == true){
+  			if(this.estEnVie('joueur') == true){
 	  			setTimeout(() => {
 	  				this.switchPkm('mort');
 	  			}, 1000);
@@ -328,7 +306,8 @@ export class CombatPage {
   				setTimeout(() => {
 	  				this.message = "Tous vos pokemons sont KO, retour au dernier centre Pkm.";
 	  				//Téléportation centre Pkm
-	  			}, 1000);
+	  				this.navCtrl.push(VoyagePage);
+	  			}, 2000);
   			}
 
   		}else{
@@ -358,7 +337,7 @@ export class CombatPage {
 				}else{
 					this.message = "L'adversaire a été vaincu!";
 					if(this.typeCombat == 'rocket'){
-						this.enemyAttackingPkm.pkm.imgFront ='team-rocket'
+						this.enemyAttackingPkm.pkm.imgFront ='team-rocket';
 						setTimeout(() => {
 					  		this.message = this.typeCombat + ": La team rocket s\'envolle vers d'autres cieuuuuux!";
 					  		setTimeout(() => {
@@ -406,32 +385,346 @@ export class CombatPage {
   	return estEnVie;
   }
 
-  creerPkmTeam(){
-    // ########################### Generer Mon pkm ###########################
 
-	this.myAttackingPkm = this.myPkmTeam[0];
+  resoudreAttaque(attack, attaquant){
 
-	console.log(this.myAttackingPkm);
+  	let randomNb, randomNbEffet, coef, pkmAttaquant, pkmDefenseur: any;
+  	pkmAttaquant = attaquant;
 
-	// ########################### Generer pkm adverse ###########################
+  	randomNb = Math.floor((Math.random() * 100) + 1);
+  	randomNbEffet = Math.floor((Math.random() * 100) + 1);
 
+  	if(pkmAttaquant == this.myAttackingPkm){
+  		pkmDefenseur = this.enemyAttackingPkm;
+  	}else{
+  		pkmDefenseur = this.myAttackingPkm;
+  	}
+
+  	coef = this.getCoefTypeAttack(attack.type, pkmDefenseur.pkm.type1, pkmDefenseur.pkm.type2);
+
+  	if(randomNb <= attack.precision){
+  		console.log(randomNb + "/" + attack.precision + "- reussi - " + attack.degats + "x" + coef + "degats.");
+  		pkmDefenseur.pv.value = pkmDefenseur.pv.value - (attack.degats * coef);
+  		if(attack.degats == 0){
+  			//Cas ou c'est une attaque a effet
+  			this.message = pkmAttaquant.pkm.nom +  " applique " + attack.effet;
+  		}else{
+  			switch (coef) {
+  			case 0:
+  				this.message = "Aucun effet!";
+  				break;
+  			case 0.5:
+  				this.message = "Ce n\'est pas très efficace!";
+  				break;
+  			case 2:
+  				this.message = "C\'est très efficace!";
+  				break;
+  			default:
+  				this.message = pkmAttaquant.pkm.nom + " inflige " + attack.degats*coef + " de dégats" ;
+  				if(randomNbEffet <= 25){
+  					setTimeout(() => {
+						this.message = pkmAttaquant.pkm.nom +  " applique " + attack.effet;
+					}, 2000);
+  				}
+  				break;
+  			}
+  		}
+  		
+  	}else{
+  		console.log(randomNb + "/" + attack.precision + "- raté");
+  		this.message = pkmAttaquant.pkm.nom + " rate sa cible!";
+  	}
+
+  	this.attackPanel = false;
+  	if(pkmAttaquant == this.myAttackingPkm){
+			this.imgEffetEnemy = "";
+  	}else{
+  		this.imgEffet = "";
+  	}
+	  	
+  }
+
+  creerEnemyTeam(typeCombat){
+
+  	let randomNb, randomLvl: any;
 	this.enemyPkmTeam = [{},{},{},{},{},{}];
 
-	this.enemyPkmTeam[0].pkm = this.pokemonList[2];
-	this.enemyPkmTeam[0].lvl = 1;
-	this.enemyPkmTeam[0].exp = 0;
-	this.enemyPkmTeam[0].pv = {};
-	this.enemyPkmTeam[0].pv.value = 10;
-	this.enemyPkmTeam[0].pv.max  = 200;
+	switch (typeCombat) {
+		case "sauvage":
+  			randomNb = Math.floor(Math.random() * this.pokemonList.length);
+  			this.enemyPkmTeam[0].pkm = this.pokemonList[randomNb];
+  			randomLvl = Math.floor((Math.random() * 3) + 1);
+			this.enemyPkmTeam[0].lvl = randomLvl;
+			this.enemyPkmTeam[0].pv = {};
+			this.enemyPkmTeam[0].pv.value = 100;
+			this.enemyPkmTeam[0].pv.max  = 100;
+			this.message = "Un " + this.enemyPkmTeam[0].pkm.nom + " sauvage apparait!";
+			break;
+/*		case "rival":
+			break;
+		case "rocket":
+			break;*/
+		default:
+			for(let i = 0; i < 3 ; i++) {
+				randomNb = Math.floor(Math.random() * this.pokemonList.length);
+	  			this.enemyPkmTeam[i].pkm = this.pokemonList[randomNb];
+	  			randomLvl = Math.floor((Math.random() * 5) + 1);
+				this.enemyPkmTeam[i].lvl = randomLvl;
+				this.enemyPkmTeam[i].pv = {};
+				this.enemyPkmTeam[i].pv.value = 100;
+				this.enemyPkmTeam[i].pv.max  = 100;
 
-	this.enemyPkmTeam[1].pkm = this.pokemonList[3];
-	this.enemyPkmTeam[1].lvl = 1;
-	this.enemyPkmTeam[1].exp = 0;
-	this.enemyPkmTeam[1].pv = {};
-	this.enemyPkmTeam[1].pv.value = 20;
-	this.enemyPkmTeam[1].pv.max  = 150;
+			}
+			this.message = "Un dresseur veut se battre!";
+			this.enemyAttackingPkm.pkm.imgFront ='rival';
+			setTimeout(() => {
+				this.message = "Le dresseur envoie " + this.enemyPkmTeam[0].pkm.nom + " !";
+			}, 2000);
+			break;
+	}
 
 	this.enemyAttackingPkm = this.enemyPkmTeam[0];
+  }
+
+  getCoefTypeAttack(typeAttack, typePkm1, typePkm2){
+  	let coef = 1;
+
+  	switch (typeAttack) {
+		case "Normal":
+			switch(typePkm1){
+				case "Roche":
+					coef = 0.5;
+					break;
+				case "Spectre":
+					coef = 0;
+					break;
+				case "Acier":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Feu":
+			switch(typePkm1){
+				case "Feu":
+					coef = 0.5;
+					break;
+				case "Eau":
+					coef = 0.5;
+					break;
+				case "Plante":
+					coef = 2;
+					break;
+				case "Glace":
+					coef = 2;
+					break;
+				case "Insecte":
+					coef = 2;
+					break;
+				case "Roche":
+					coef = 0.5;
+					break;
+				case "Dragon":
+					coef = 0.5;
+					break;
+				case "Acier":
+					coef = 2;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Eau":
+			switch(typePkm1){
+				case "Feu":
+					coef = 2;
+					break;
+				case "Eau":
+					coef = 0.5;
+					break;
+				case "Plante":
+					coef = 0.5;
+					break;
+				case "Sol":
+					coef = 2;
+					break;
+				case "Roche":
+					coef = 2;
+					break;
+				case "Dragon":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Plante":
+			switch(typePkm1){
+				case "Feu":
+					coef = 0.5;
+					break;
+				case "Eau":
+					coef = 2;
+					break;
+				case "Plante":
+					coef = 0.5;
+					break;
+				case "Poison":
+					coef = 0.5;
+					break;
+				case "Sol":
+					coef = 2;
+					break;
+				case "Vol":
+					coef = 0.5;
+					break;
+				case "Insecte":
+					coef = 0.5;
+					break;
+				case "Roche":
+					coef = 2;
+					break;
+				case "Dragon":
+					coef = 0.5;
+					break;
+				case "Acier":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Electrik":
+			switch(typePkm1){
+				case "Eau":
+					coef = 2;
+					break;
+				case "Plante":
+					coef = 0.5;
+					break;
+				case "Electrik":
+					coef = 0.5;
+					break;
+				case "Sol":
+					coef = 0;
+					break;
+				case "Vol":
+					coef = 2;
+					break;
+				case "Dragon":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Glace":
+			switch(typePkm1){
+				case "Feu":
+					coef = 0.5;
+					break;
+				case "Eau":
+					coef = 0.5;
+					break;
+				case "Plante":
+					coef = 2;
+					break;
+				case "Glace":
+					coef = 0.5;
+					break;
+				case "Sol":
+					coef = 2;
+					break;
+				case "Vol":
+					coef = 2;
+					break;
+				case "Dragon":
+					coef = 2;
+					break;
+				case "Acier":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;	
+		case "Combat":
+			switch(typePkm1){
+				case "Normal":
+					coef = 2;
+					break;
+				case "Glace":
+					coef = 2;
+					break;
+				case "Poison":
+					coef = 0.5;
+					break;
+				case "Vol":
+					coef = 0.5;
+					break;
+				case "Psy":
+					coef = 0.5;
+					break;
+				case "Insecte":
+					coef = 0.5;
+					break;
+				case "Roche":
+					coef = 2;
+					break;
+				case "Spectre":
+					coef = 0;
+					break;
+				case "Ténèbres":
+					coef = 2;
+					break;
+				case "Acier":
+					coef = 2;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Poison":
+			switch(typePkm1){
+				case "Plante":
+					coef = 2;
+					break;
+				case "Poison":
+					coef = 0.5;
+					break;
+				case "Sol":
+					coef = 0.5;
+					break;
+				case "Roche":
+					coef = 0.5;
+					break;
+				case "Spectre":
+					coef = 0.5;
+					break;
+				case "Acier":
+					coef = 0;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		default:
+			coef = 1;
+			break; 
+
+  	}
+
+  return coef;
+
   }
 
 }

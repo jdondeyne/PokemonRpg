@@ -18,7 +18,7 @@ var CombatPage = /** @class */ (function () {
         this.navParams = navParams;
         this.storage = storage;
         this.pokemonList = {};
-        this.itemList = {};
+        /*  itemList: any = {};*/
         this.myPkmTeam = {};
         this.enemyPkmTeam = {};
         this.myAttackingPkm = {};
@@ -30,6 +30,8 @@ var CombatPage = /** @class */ (function () {
         this.imgEffet = "";
         this.imgEffetEnemy = "";
         this.myItemList = [];
+        this.typeCombat = "";
+        this.idLieu = 0;
         this.enemyAttackingPkm = {};
         this.myAttackingPkm = {};
         this.enemyAttackingPkm.pv = {};
@@ -38,48 +40,25 @@ var CombatPage = /** @class */ (function () {
         this.myAttackingPkm.pkm = {};
         this.enemyAttackingPkm.pkm.moveList = [];
         this.myAttackingPkm.pkm.moveList = [];
-        this.itemList = [
-            {
-                nom: 'Pokeball',
-                quantite: 10,
-                enCombat: true,
-                surSoi: false
-            },
-            {
-                nom: 'Potion',
-                quantite: 8,
-                enCombat: true,
-                surSoi: true
-            },
-            {
-                nom: 'Super potion',
-                quantite: 5,
-                enCombat: true,
-                surSoi: true
-            },
-            {
-                nom: 'Rappel',
-                quantite: 2,
-                enCombat: true,
-                surSoi: true
-            },
-            {
-                nom: 'Cane',
-                quantite: 1,
-                enCombat: false,
-                surSoi: true
-            }
-        ];
     }
     CombatPage.prototype.ionViewWillEnter = function () {
         var _this = this;
+        this.typeCombat = this.navParams.get('type');
+        this.idLieu = this.navParams.get('lieu');
         this.storage.get('pokemonList').then(function (val) {
             _this.pokemonList = val;
-            _this.creerPkmTeam();
+        });
+        this.storage.get('save.myPkmTeam').then(function (val) {
+            _this.myPkmTeam = val;
+            _this.myAttackingPkm = _this.myPkmTeam[0];
+            _this.creerEnemyTeam(_this.typeCombat);
         });
     };
     CombatPage.prototype.attack = function () {
         this.attackPanel = true;
+    };
+    CombatPage.prototype.back = function () {
+        this.attackPanel = false;
     };
     CombatPage.prototype.switchPkm = function (raison) {
         var _this = this;
@@ -124,7 +103,9 @@ var CombatPage = /** @class */ (function () {
                         _this.message = data.pkm.nom + " en avant!";
                         _this.myAttackingPkm = data;
                         //--> Tour adverse
-                        _this.enemyTurn();
+                        if (_this.estEnVie('bot') == true) {
+                            _this.enemyTurn();
+                        }
                     }
                 }
             }
@@ -136,12 +117,12 @@ var CombatPage = /** @class */ (function () {
         var alert = this.alertCtrl.create();
         alert.setTitle('Choisir un objet à utiliser');
         var i;
-        for (i = 0; i < this.itemList.length; i++) {
-            if (this.itemList[i] != null) {
+        for (i = 0; i < this.myItemList.length; i++) {
+            if (this.myItemList[i] != null) {
                 alert.addInput({
                     type: 'radio',
-                    label: this.itemList[i].nom + ' - x' + this.itemList[i].quantite,
-                    value: this.itemList[i]
+                    label: this.myItemList[i].nom + ' - x' + this.myItemList[i].quantite,
+                    value: this.myItemList[i]
                 });
             }
         }
@@ -157,7 +138,13 @@ var CombatPage = /** @class */ (function () {
                             _this.myAttackingPkm.pv.value = _this.myAttackingPkm.pv.value + 40;
                             break;
                         case 'Pokeball':
-                            _this.message = "Vous utilisez " + data.nom + " sur " + _this.enemyAttackingPkm.pkm.nom;
+                            if (_this.typeCombat == "sauvage") {
+                                _this.message = "Vous utilisez " + data.nom + " sur " + _this.enemyAttackingPkm.pkm.nom;
+                                data.quantite = data.quantite - 1;
+                            }
+                            else {
+                                _this.message = "Vous ne pouvez pas capturer les pkm des autres dresseurs!";
+                            }
                             break;
                         default:
                             console.log("Objet inconnu");
@@ -168,7 +155,9 @@ var CombatPage = /** @class */ (function () {
                                 }else{
                                     this.message = "Vous utilisez " + data.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
                                 }*/
-                    _this.enemyTurn();
+                    if (_this.estEnVie('bot') == true) {
+                        _this.enemyTurn();
+                    }
                 }
                 else {
                     console.log('Objet hors combat:', data);
@@ -183,7 +172,6 @@ var CombatPage = /** @class */ (function () {
         console.log(attack);
         this.message = this.myAttackingPkm.pkm.nom + " utilise " + attack.nom + " !";
         this.isAttacking = true;
-        this.imgEffetEnemy = attack.img;
         var randomNb;
         randomNb = Math.floor((Math.random() * 100) + 1);
         setTimeout(function () {
@@ -221,20 +209,28 @@ var CombatPage = /** @class */ (function () {
                 {
                     text: 'Oui',
                     handler: function () {
-                        var randomNb;
-                        randomNb = Math.floor((Math.random() * 100) + 1);
-                        if (randomNb > 30) {
-                            _this.message = "Vous prenez la fuite!";
-                            console.log(randomNb + " > 30 - réussi");
-                            //--> Retour ecran voyage
-                            setTimeout(function () {
-                                _this.navCtrl.push(VoyagePage);
-                            }, 1000);
+                        if (_this.typeCombat == 'sauvage') {
+                            var randomNb = void 0;
+                            randomNb = Math.floor((Math.random() * 100) + 1);
+                            if (randomNb > 30) {
+                                _this.message = "Vous prenez la fuite!";
+                                console.log(randomNb + " > 30 - réussi");
+                                //--> Retour ecran voyage
+                                setTimeout(function () {
+                                    _this.navCtrl.push(VoyagePage);
+                                }, 1000);
+                            }
+                            else {
+                                _this.message = "Impossible de fuir!";
+                                console.log(randomNb + " <= 30 - raté");
+                                //--> Tour adverse
+                                if (_this.estEnVie('bot') == true) {
+                                    _this.enemyTurn();
+                                }
+                            }
                         }
                         else {
-                            _this.message = "Impossible de fuir!";
-                            console.log(randomNb + " <= 30 - raté");
-                            //--> Tour adverse
+                            _this.message = "Vous ne pouvez pas fuir un combat de dresseurs!";
                         }
                     }
                 }
@@ -247,28 +243,33 @@ var CombatPage = /** @class */ (function () {
         var randomNb, randomNbAtk;
         var attack;
         setTimeout(function () {
-            //choisir un attaque au hasard
-            randomNbAtk = Math.floor(Math.random() * (4)) + 0;
-            attack = _this.enemyAttackingPkm.pkm.moveList[randomNbAtk];
-            _this.message = _this.enemyAttackingPkm.pkm.nom + " ennemi utilise " + attack.nom + " !";
-            _this.imgEffet = attack.img;
-            /*  	this.isAttacking = true;*/
-            randomNb = Math.floor((Math.random() * 100) + 1);
-            setTimeout(function () {
-                if (randomNb <= attack.precision) {
-                    console.log(randomNb + "/" + attack.precision + "- reussi");
-                    _this.message = "C\'est très efficace!";
-                    _this.myAttackingPkm.pv.value = _this.myAttackingPkm.pv.value - attack.degats;
-                    //--> Tour adverse
-                }
-                else {
-                    console.log(randomNb + "/" + attack.precision + "- raté");
-                    _this.message = _this.enemyAttackingPkm.pkm.nom + " rate sa cible!";
-                    //--> Tour adverse
-                }
+            if (_this.enemyAttackingPkm.pv.value > 0) {
+                //choisir un attaque au hasard
+                randomNbAtk = Math.floor(Math.random() * (4)) + 0;
+                attack = _this.enemyAttackingPkm.pkm.moveList[randomNbAtk];
+                _this.message = _this.enemyAttackingPkm.pkm.nom + " ennemi utilise " + attack.nom + " !";
+                _this.imgEffet = attack.img;
+                /*  	this.isAttacking = true;*/
+                randomNb = Math.floor((Math.random() * 100) + 1);
+                setTimeout(function () {
+                    if (randomNb <= attack.precision) {
+                        console.log(randomNb + "/" + attack.precision + "- reussi");
+                        _this.message = "C\'est très efficace!";
+                        _this.myAttackingPkm.pv.value = _this.myAttackingPkm.pv.value - attack.degats;
+                        //--> Tour adverse
+                    }
+                    else {
+                        console.log(randomNb + "/" + attack.precision + "- raté");
+                        _this.message = _this.enemyAttackingPkm.pkm.nom + " rate sa cible!";
+                        //--> Tour adverse
+                    }
+                    _this.isAttacking = false;
+                    _this.imgEffet = "";
+                }, 1000);
+            }
+            else {
                 _this.isAttacking = false;
-                _this.imgEffet = "";
-            }, 1000);
+            }
         }, 1000);
     };
     CombatPage.prototype.checkDeath = function (event, bar) {
@@ -278,18 +279,18 @@ var CombatPage = /** @class */ (function () {
         if (event.value <= 0) {
             if (bar == 'joueur') {
                 //Verifier qu'il reste un pkm en vie
-                var estEnVie = false;
-                for (var i = 0; i < this.myPkmTeam.length; i++) {
-                    if (this.myPkmTeam[i].pkm != null) {
-                        if (this.myPkmTeam[i].pv.value > 0) {
-                            estEnVie = true;
-                            break;
-                        }
-                    }
-                }
+                /*  			let estEnVie = false;
+                            for(let i=0; i<this.myPkmTeam.length; i++){
+                                if(this.myPkmTeam[i].pkm != null){
+                                    if(this.myPkmTeam[i].pv.value > 0){
+                                        estEnVie = true;
+                                        break;
+                                    }
+                                }
+                            }*/
                 this.message = this.myAttackingPkm.pkm.nom + " est KO!";
                 this.isAttacking = true;
-                if (estEnVie == true) {
+                if (estEnVie('joueur') == true) {
                     setTimeout(function () {
                         _this.switchPkm('mort');
                     }, 1000);
@@ -299,7 +300,8 @@ var CombatPage = /** @class */ (function () {
                     setTimeout(function () {
                         _this.message = "Tous vos pokemons sont KO, retour au dernier centre Pkm.";
                         //Téléportation centre Pkm
-                    }, 1000);
+                        _this.navCtrl.push(VoyagePage);
+                    }, 2000);
                 }
             }
             else {
@@ -327,10 +329,33 @@ var CombatPage = /** @class */ (function () {
                 }
                 else {
                     //Combat réussi
-                    this.message = "L'adversaire a été vaincu!";
-                    setTimeout(function () {
-                        _this.navCtrl.push(VoyagePage);
-                    }, 1000);
+                    if (this.typeCombat == 'sauvage') {
+                        this.message = "Le " + this.enemyAttackingPkm.pkm.nom + " sauvage a été vaincu.";
+                        setTimeout(function () {
+                            _this.navCtrl.push(VoyagePage);
+                        }, 1000);
+                    }
+                    else {
+                        this.message = "L'adversaire a été vaincu!";
+                        if (this.typeCombat == 'rocket') {
+                            this.enemyAttackingPkm.pkm.imgFront = 'team-rocket';
+                            setTimeout(function () {
+                                _this.message = _this.typeCombat + ": La team rocket s\'envolle vers d'autres cieuuuuux!";
+                                setTimeout(function () {
+                                    _this.navCtrl.push(VoyagePage);
+                                }, 2000);
+                            }, 1000);
+                        }
+                        else {
+                            this.enemyAttackingPkm.pkm.imgFront = 'rival';
+                            setTimeout(function () {
+                                _this.message = _this.typeCombat + ": Je vais continuer à m\'entrainer.";
+                                setTimeout(function () {
+                                    _this.navCtrl.push(VoyagePage);
+                                }, 2000);
+                            }, 1000);
+                        }
+                    }
                 }
             }
         }
@@ -354,34 +379,42 @@ var CombatPage = /** @class */ (function () {
         }
         return estEnVie;
     };
-    CombatPage.prototype.creerPkmTeam = function () {
-        // ########################### Generer Mon pkm ###########################
-        this.myPkmTeam = [{}, {}, {}, {}, {}, {}];
-        for (var i = 0; i < 4; i++) {
-            this.myPkmTeam[i].pkm = this.pokemonList[i];
-            this.myPkmTeam[i].lvl = i + 1;
-            this.myPkmTeam[i].exp = 0;
-            this.myPkmTeam[i].pv = {};
-            this.myPkmTeam[i].pv.value = i * 10;
-            this.myPkmTeam[i].pv.max = 150;
-        }
-        console.log(this.myPkmTeam);
-        this.myAttackingPkm = this.myPkmTeam[1];
-        console.log(this.myAttackingPkm);
-        // ########################### Generer pkm adverse ###########################
+    CombatPage.prototype.creerEnemyTeam = function (typeCombat) {
+        var _this = this;
+        var randomNb, randomLvl;
         this.enemyPkmTeam = [{}, {}, {}, {}, {}, {}];
-        this.enemyPkmTeam[0].pkm = this.pokemonList[2];
-        this.enemyPkmTeam[0].lvl = 1;
-        this.enemyPkmTeam[0].exp = 0;
-        this.enemyPkmTeam[0].pv = {};
-        this.enemyPkmTeam[0].pv.value = 10;
-        this.enemyPkmTeam[0].pv.max = 200;
-        this.enemyPkmTeam[1].pkm = this.pokemonList[3];
-        this.enemyPkmTeam[1].lvl = 1;
-        this.enemyPkmTeam[1].exp = 0;
-        this.enemyPkmTeam[1].pv = {};
-        this.enemyPkmTeam[1].pv.value = 20;
-        this.enemyPkmTeam[1].pv.max = 150;
+        switch (typeCombat) {
+            case "sauvage":
+                randomNb = Math.floor(Math.random() * this.pokemonList.length);
+                this.enemyPkmTeam[0].pkm = this.pokemonList[randomNb];
+                randomLvl = Math.floor((Math.random() * 5) + 1);
+                this.enemyPkmTeam[0].lvl = randomLvl;
+                this.enemyPkmTeam[0].pv = {};
+                this.enemyPkmTeam[0].pv.value = 100;
+                this.enemyPkmTeam[0].pv.max = 100;
+                this.message = "Un " + this.enemyPkmTeam[0].pkm.nom + " sauvage apparait!";
+                break;
+            /*		case "rival":
+                        break;
+                    case "rocket":
+                        break;*/
+            default:
+                for (var i = 0; i < 3; i++) {
+                    randomNb = Math.floor(Math.random() * this.pokemonList.length);
+                    this.enemyPkmTeam[i].pkm = this.pokemonList[randomNb];
+                    randomLvl = Math.floor((Math.random() * 5) + 1);
+                    this.enemyPkmTeam[i].lvl = randomLvl;
+                    this.enemyPkmTeam[i].pv = {};
+                    this.enemyPkmTeam[i].pv.value = 100;
+                    this.enemyPkmTeam[i].pv.max = 100;
+                }
+                this.message = "Un dresseur veut se battre!";
+                this.enemyAttackingPkm.pkm.imgFront = 'rival';
+                setTimeout(function () {
+                    _this.message = "Le dresseur envoie " + _this.enemyPkmTeam[0].pkm.nom + " !";
+                }, 2000);
+                break;
+        }
         this.enemyAttackingPkm = this.enemyPkmTeam[0];
     };
     CombatPage = __decorate([
@@ -389,7 +422,8 @@ var CombatPage = /** @class */ (function () {
             selector: 'page-combat',
             templateUrl: 'combat.html',
         }),
-        __metadata("design:paramtypes", [NavController, AlertController, NavParams, Storage])
+        __metadata("design:paramtypes", [NavController, AlertController,
+            NavParams, Storage])
     ], CombatPage);
     return CombatPage;
 }());

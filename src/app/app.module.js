@@ -13,6 +13,7 @@ import { HomePage } from '../pages/home/home';
 import { ListPage } from '../pages/list/list';
 import { CombatPage } from '../pages/combat/combat';
 import { VoyagePage } from '../pages/voyage/voyage';
+import { StarterPage } from '../pages/starter/starter';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 var AppModule = /** @class */ (function () {
@@ -25,7 +26,8 @@ var AppModule = /** @class */ (function () {
                 HomePage,
                 ListPage,
                 CombatPage,
-                VoyagePage
+                VoyagePage,
+                StarterPage
             ],
             imports: [
                 BrowserModule,
@@ -38,7 +40,8 @@ var AppModule = /** @class */ (function () {
                 HomePage,
                 ListPage,
                 CombatPage,
-                VoyagePage
+                VoyagePage,
+                StarterPage
             ],
             providers: [
                 StatusBar,
