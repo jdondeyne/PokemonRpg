@@ -27,6 +27,7 @@ var HomePage = /** @class */ (function () {
         });
         loading.present();
         this.isStarted = false;
+        this.itemList = [];
         //Verifier que le jeu a déja été lancé 1 fois
         this.storage.get('pokemonList').then(function (val) {
             console.log(val);
@@ -42,6 +43,9 @@ var HomePage = /** @class */ (function () {
             if (val != null) {
                 _this.isStarted = true;
             }
+        });
+        this.storage.get('itemList').then(function (val) {
+            _this.itemList = val;
         });
     }
     HomePage.prototype.startNewGame = function () {
@@ -101,8 +105,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Charge',
                         type: 'Normal',
-                        degats: 10,
-                        precision: 80
+                        degats: 40,
+                        precision: 100
                     },
                     {
                         nom: 'Rugissement',
@@ -114,13 +118,13 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Fouet-lianne',
                         type: 'Plante',
-                        degats: 20,
+                        degats: 50,
                         precision: 70
                     },
                     {
                         nom: 'Tranch\'herbe',
                         type: 'Plante',
-                        degats: 30,
+                        degats: 70,
                         precision: 60
                     }
                 ]
@@ -138,8 +142,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Griffe',
                         type: 'Normal',
-                        degats: 10,
-                        precision: 80
+                        degats: 40,
+                        precision: 90
                     },
                     {
                         nom: 'Mimi-queue',
@@ -151,15 +155,17 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Flamèche',
                         type: 'Feu',
-                        degats: 30,
-                        precision: 70,
+                        degats: 50,
+                        precision: 80,
+                        effet: 'Brulure',
                         img: 'feu'
                     },
                     {
                         nom: 'Brouillard',
                         type: 'Poison',
                         degats: 0,
-                        precision: 100
+                        precision: 100,
+                        effet: 'Précision-'
                     }
                 ]
             },
@@ -176,8 +182,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Charge',
                         type: 'Normal',
-                        degats: 10,
-                        precision: 80
+                        degats: 40,
+                        precision: 100
                     },
                     {
                         nom: 'Mimi-queue',
@@ -189,16 +195,16 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Ecume',
                         type: 'Eau',
-                        degats: 15,
-                        precision: 70,
+                        degats: 35,
+                        precision: 90,
                         effet: 'Defense-',
                         img: 'eau'
                     },
                     {
                         nom: 'Pistolet à eau',
                         type: 'Eau',
-                        degats: 30,
-                        precision: 70,
+                        degats: 60,
+                        precision: 80,
                         img: 'eau'
                     }
                 ]
@@ -216,8 +222,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Charge',
                         type: 'Normal',
-                        degats: 10,
-                        precision: 80
+                        degats: 40,
+                        precision: 100
                     },
                     {
                         nom: 'Jet de Sable',
@@ -229,14 +235,14 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Tornade',
                         type: 'Vol',
-                        degats: 40,
-                        precision: 100,
+                        degats: 60,
+                        precision: 90,
                         img: ''
                     },
                     {
                         nom: 'Vive-Attaque',
                         type: 'Normal',
-                        degats: 40,
+                        degats: 30,
                         precision: 100,
                         img: ''
                     }
@@ -255,8 +261,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Charge',
                         type: 'Normal',
-                        degats: 10,
-                        precision: 80
+                        degats: 40,
+                        precision: 100
                     },
                     {
                         nom: 'Mimi-queue',
@@ -337,8 +343,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Charge',
                         type: 'Normal',
-                        degats: 10,
-                        precision: 80
+                        degats: 40,
+                        precision: 100
                     },
                     {
                         nom: 'Mimi-queue',
@@ -350,8 +356,8 @@ var HomePage = /** @class */ (function () {
                     {
                         nom: 'Eclair',
                         type: 'Electrik',
-                        degats: 20,
-                        precision: 70,
+                        degats: 60,
+                        precision: 80,
                         effet: 'Paralysie',
                         img: 'foudre'
                     },
@@ -428,8 +434,7 @@ var HomePage = /** @class */ (function () {
                         nom: 'Charge',
                         type: 'Normal',
                         degats: 40,
-                        precision: 100,
-                        effet: 'Defense-'
+                        precision: 100
                     },
                     {
                         nom: 'Purédpois',
@@ -453,31 +458,30 @@ var HomePage = /** @class */ (function () {
         this.storage.set('pokemonList', this.pokemonList);
     };
     HomePage.prototype.creerBDDItem = function () {
-        this.itemList = {};
         this.itemList = [
             {
                 nom: 'Pokeball',
                 enCombat: true,
                 surSoi: false,
-                tauxCapture: 20
+                bonusBall: 1
             },
             {
                 nom: 'Super Ball',
                 enCombat: true,
                 surSoi: false,
-                tauxCapture: 40
+                bonusBall: 1.5
             },
             {
                 nom: 'Hyper Ball',
                 enCombat: true,
                 surSoi: false,
-                tauxCapture: 60
+                bonusBall: 2
             },
             {
                 nom: 'Master Ball',
                 enCombat: true,
                 surSoi: false,
-                tauxCapture: 100
+                bonusBall: 255
             },
             {
                 nom: 'Potion',
@@ -533,6 +537,7 @@ var HomePage = /** @class */ (function () {
                 quantite: 5
             }
         ];
+        console.log(myItemList);
         //Creer 6 slots + 1er Pkm
         myPkmTeam = [{}, {}, {}, {}, {}, {}];
         /*	myPkmTeam[0].pkm = this.pokemonList[0];

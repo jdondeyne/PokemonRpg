@@ -25,6 +25,7 @@ export class HomePage {
     loading.present();
 
   	this.isStarted = false;
+  	this.itemList = [];
 
   	//Verifier que le jeu a déja été lancé 1 fois
   	this.storage.get('pokemonList').then((val) => {
@@ -42,6 +43,10 @@ export class HomePage {
   		if(val != null){
   			this.isStarted = true;
   		}
+  	 });
+
+  	this.storage.get('itemList').then((val) => {
+  		this.itemList = val;
   	 });
 
 
@@ -107,6 +112,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_001',
         imgBack: 'Sprite_6_dos_001',
         evolLvl: 16,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Charge',
@@ -125,13 +132,13 @@ export class HomePage {
 	        nom: 'Fouet-lianne',
 	        type: 'Plante',
 	        degats: 50,
-	        precision: 70
+	        precision: 90
 	      },
 	      {
 	        nom: 'Tranch\'herbe',
 	        type: 'Plante',
-	        degats: 70,
-	        precision: 60
+	        degats: 60,
+	        precision: 90
 	      }
 	    ]
       },
@@ -144,12 +151,14 @@ export class HomePage {
         imgFront: 'Sprite_6_x_004',
         imgBack: 'Sprite_6_dos_004',
         evolLvl: 16,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Griffe',
 	        type: 'Normal',
 	        degats: 40,
-	        precision: 90
+	        precision: 100
 	      },
 	      {
 	        nom: 'Mimi-queue',
@@ -162,8 +171,8 @@ export class HomePage {
 	        nom: 'Flamèche',
 	        type: 'Feu',
 	        degats: 50,
-	        precision: 80,
-	        effet: 'Brulure'
+	        precision: 90,
+	        effet: 'Brulure',
 	        img: 'feu'
 	      },
 	      {
@@ -184,6 +193,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_007',
         imgBack: 'Sprite_6_dos_007',
         evolLvl: 16,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Charge',
@@ -202,7 +213,7 @@ export class HomePage {
 	        nom: 'Ecume',
 	        type: 'Eau',
 	        degats: 35,
-	        precision: 90,
+	        precision: 100,
 	        effet: 'Defense-',
 	        img: 'eau'
 	      },
@@ -210,8 +221,41 @@ export class HomePage {
 	        nom: 'Pistolet à eau',
 	        type: 'Eau',
 	        degats: 60,
-	        precision: 80,
+	        precision: 90,
 	        img: 'eau'
+	      }
+	    ]
+      },
+      {
+      	id: 10,
+        nom: 'Chenipan',
+        type1: 'Insecte',
+        type2: '',
+        tauxCapture: 255,
+        imgFront: 'Sprite_6_x_010',
+        imgBack: 'Sprite_6_dos_010',
+        evolLvl: 7,
+        pvBase: 45,
+        defenseBase: 49,
+        moveList: [
+	      {
+	        nom: 'Charge',
+	        type: 'Normal',
+	        degats: 40,
+	        precision: 100
+	      },
+	      {
+	        nom: 'Sécrétion',
+	        type: 'Insecte',
+	        degats: 0,
+	        precision: 95,
+	        effet: 'Vitesse-'
+	      },
+	      {
+	        nom: 'Piqûre',
+	        type: 'Insecte',
+	        degats: 60,
+	        precision: 100
 	      }
 	    ]
       },
@@ -224,6 +268,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_016',
         imgBack: 'Sprite_6_dos_016',
         evolLvl: 18,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Charge',
@@ -263,6 +309,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_019',
         imgBack: 'Sprite_6_dos_019',
         evolLvl: 20,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Charge',
@@ -303,6 +351,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_023',
         imgBack: 'Sprite_6_dos_023',
         evolLvl: 22,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Ligotage',
@@ -345,6 +395,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_025_m',
         imgBack: 'Sprite_6_dos_025_m',
         evolLvl: -1,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Charge',
@@ -378,6 +430,49 @@ export class HomePage {
 	    ]
       },
       {
+      	id: 37,
+        nom: 'Goupix',
+        type1: 'Feu',
+        type2: '',
+        tauxCapture: 190,
+        imgFront: 'Sprite_6_x_037',
+        imgBack: 'Sprite_6_dos_037',
+        evolLvl: -1,
+        pvBase: 45,
+        defenseBase: 49,
+        moveList: [
+	      {
+	        nom: 'Flamèche',
+	        type: 'Feu',
+	        degats: 40,
+	        precision: 100,
+	        effet: 'Brulure',
+	        img: 'feu'
+	      },
+	      {
+	        nom: 'Mimi-queue',
+	        type: 'Normal',
+	        degats: 0,
+	        precision: 100,
+	        effet: 'Défense-'
+	      },
+	      {
+	        nom: 'Onde folie',
+	        type: 'Spectre',
+	        degats: 0,
+	        precision: 100
+	      },
+	      {
+	        nom: 'Danse Flamme',
+	        type: 'Feu',
+	        degats: 35,
+	        precision: 85,
+	        effet: 'Brulure',
+	        img: 'feu'
+	      }
+	    ]
+      },
+      {
       	id: 41,
         nom: 'Nosferapti',
         type1: 'Poison',
@@ -386,6 +481,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_041',
         imgBack: 'Sprite_6_dos_041',
         evolLvl: 22,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Vampirisme',
@@ -420,6 +517,49 @@ export class HomePage {
 	    ]
       },
       {
+      	id: 77,
+        nom: 'Ponyta',
+        type1: 'Feu',
+        type2: '',
+        tauxCapture: 190,
+        imgFront: 'Sprite_6_x_077',
+        imgBack: 'Sprite_6_dos_077',
+        evolLvl: 40,
+        pvBase: 45,
+        defenseBase: 49,
+        moveList: [
+	      {
+	        nom: 'Charge',
+	        type: 'Normal',
+	        degats: 40,
+	        precision: 100
+	      },
+	      {
+	        nom: 'Rugissement',
+	        type: 'Normal',
+	        degats: 0,
+	        precision: 100,
+	        effet: 'Attaque-'
+	      },
+	      {
+	        nom: 'Flamèche',
+	        type: 'Feu',
+	        degats: 40,
+	        precision: 100,
+	        effet: 'Brulure',
+	        img: 'feu'
+	      },
+	      {
+	        nom: 'Roue de feu',
+	        type: 'Feu',
+	        degats: 60,
+	        precision: 100,
+	        effet: 'Brulure',
+	        img: 'feu'
+	      }
+	    ]
+      },
+      {
       	id: 109,
         nom: 'Smogo',
         type1: 'Poison',
@@ -428,6 +568,8 @@ export class HomePage {
         imgFront: 'Sprite_6_x_109',
         imgBack: 'Sprite_6_dos_109',
         evolLvl: 35,
+        pvBase: 45,
+        defenseBase: 49,
         moveList: [
 	      {
 	        nom: 'Gaz Toxik',
@@ -466,32 +608,31 @@ export class HomePage {
   }
 
   creerBDDItem(){
-  	this.itemList = {};
 
   	this.itemList = [
       {
         nom: 'Pokeball',
         enCombat: true,
         surSoi: false,
-        tauxCapture: 20
+        bonusBall: 1
       },
       {
         nom: 'Super Ball',
         enCombat: true,
         surSoi: false,
-        tauxCapture: 40
+        bonusBall: 1.5
       },
       {
         nom: 'Hyper Ball',
         enCombat: true,
         surSoi: false,
-        tauxCapture: 60
+        bonusBall: 2
       },
       {
         nom: 'Master Ball',
         enCombat: true,
         surSoi: false,
-        tauxCapture: 100
+        bonusBall: 255
       },
       {
         nom: 'Potion',
@@ -538,7 +679,7 @@ export class HomePage {
 
   createNewGame(){
   	let myPkmTeam = {};
-  	let myItemList = {};
+  	let myItemList= {};
 
   	myItemList = [
       {
@@ -551,14 +692,10 @@ export class HomePage {
       }
     ]
 
+    console.log(myItemList);
+
     //Creer 6 slots + 1er Pkm
     myPkmTeam = [{},{},{},{},{},{}];
-/*	myPkmTeam[0].pkm = this.pokemonList[0];
-	myPkmTeam[0].lvl = 5;
-	myPkmTeam[0].exp = 0;
-	myPkmTeam[0].pv = {};
-	myPkmTeam[0].pv.value = 100;
-	myPkmTeam[0].pv.max  = 100;*/
 
     this.storage.set('save.myItemList', myItemList);
     this.storage.set('save.myPkmTeam', myPkmTeam);

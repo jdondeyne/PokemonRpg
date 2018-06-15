@@ -18,7 +18,7 @@ var CombatPage = /** @class */ (function () {
         this.navParams = navParams;
         this.storage = storage;
         this.pokemonList = {};
-        /*  itemList: any = {};*/
+        this.itemList = {};
         this.myPkmTeam = {};
         this.enemyPkmTeam = {};
         this.myAttackingPkm = {};
@@ -27,6 +27,7 @@ var CombatPage = /** @class */ (function () {
         this.attackPanel = false;
         this.message = "";
         this.isAttacking = false;
+        this.isCaptured = false;
         this.imgEffet = "";
         this.imgEffetEnemy = "";
         this.myItemList = [];
@@ -48,10 +49,17 @@ var CombatPage = /** @class */ (function () {
         this.storage.get('pokemonList').then(function (val) {
             _this.pokemonList = val;
         });
+        this.storage.get('itemList').then(function (val) {
+            _this.itemList = val;
+        });
         this.storage.get('save.myPkmTeam').then(function (val) {
             _this.myPkmTeam = val;
             _this.myAttackingPkm = _this.myPkmTeam[0];
             _this.creerEnemyTeam(_this.typeCombat);
+        });
+        this.storage.get('save.myItemList').then(function (val) {
+            _this.myItemList = val;
+            console.log(_this.myItemList);
         });
     };
     CombatPage.prototype.attack = function () {
@@ -121,7 +129,7 @@ var CombatPage = /** @class */ (function () {
             if (this.myItemList[i] != null) {
                 alert.addInput({
                     type: 'radio',
-                    label: this.myItemList[i].nom + ' - x' + this.myItemList[i].quantite,
+                    label: this.myItemList[i].item.nom + ' - x' + this.myItemList[i].quantite,
                     value: this.myItemList[i]
                 });
             }
@@ -130,38 +138,36 @@ var CombatPage = /** @class */ (function () {
         alert.addButton({
             text: 'Utiliser',
             handler: function (data) {
-                if (data.enCombat == true) {
+                if (data.enCombat == false) {
+                    console.log('Objet hors combat:', data);
+                    _this.message = data.nom + " doit être utilisé hors combat.";
+                }
+                else {
                     console.log('Objet utilisé:', data);
-                    switch (data.nom) {
-                        case 'Potion':
-                            _this.message = "Vous utilisez " + data.nom + " sur " + _this.myAttackingPkm.pkm.nom;
-                            _this.myAttackingPkm.pv.value = _this.myAttackingPkm.pv.value + 40;
-                            break;
-                        case 'Pokeball':
-                            if (_this.typeCombat == "sauvage") {
-                                _this.message = "Vous utilisez " + data.nom + " sur " + _this.enemyAttackingPkm.pkm.nom;
-                                data.quantite = data.quantite - 1;
-                            }
-                            else {
-                                _this.message = "Vous ne pouvez pas capturer les pkm des autres dresseurs!";
-                            }
-                            break;
-                        default:
-                            console.log("Objet inconnu");
-                            break;
+                    if (data.bonusBall != null || data.bonusBall != "") {
+                        //C'est une pokeball
+                        if (_this.typeCombat == "sauvage") {
+                            _this.message = "Vous utilisez " + data.item.nom + " sur " + _this.enemyAttackingPkm.pkm.nom;
+                            data.quantite = data.quantite - 1;
+                            _this.capture(data, _this.enemyAttackingPkm);
+                            //TODO -> storage
+                        }
+                        else {
+                            _this.message = "Vous ne pouvez pas capturer les pkm des autres dresseurs!";
+                        }
                     }
-                    /*      		if(data.surSoi == true){
-                                    this.message = "Vous utilisez " + data.nom + " sur " + this.myAttackingPkm.pkm.nom;
-                                }else{
-                                    this.message = "Vous utilisez " + data.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
-                                }*/
+                    else {
+                        if (data.pvRendus != null || data.pvRendus != "") {
+                            //C'est une potion
+                            _this.message = "Vous utilisez " + data.nom + " sur " + _this.myAttackingPkm.pkm.nom;
+                            _this.myAttackingPkm.pv.value = _this.myAttackingPkm.pv.value + data.pvRendus;
+                            data.quantite = data.quantite - 1;
+                            //TODO -> storage
+                        }
+                    }
                     if (_this.estEnVie('bot') == true) {
                         _this.enemyTurn();
                     }
-                }
-                else {
-                    console.log('Objet hors combat:', data);
-                    _this.message = data.nom + " doit être utilisé hors combat.";
                 }
             }
         });
@@ -172,23 +178,8 @@ var CombatPage = /** @class */ (function () {
         console.log(attack);
         this.message = this.myAttackingPkm.pkm.nom + " utilise " + attack.nom + " !";
         this.isAttacking = true;
-        var randomNb;
-        randomNb = Math.floor((Math.random() * 100) + 1);
         setTimeout(function () {
-            if (randomNb <= attack.precision) {
-                console.log(randomNb + "/" + attack.precision + "- reussi");
-                _this.message = "C\'est très efficace!";
-                _this.enemyAttackingPkm.pv.value = _this.enemyAttackingPkm.pv.value - attack.degats;
-                //--> Tour adverse
-            }
-            else {
-                console.log(randomNb + "/" + attack.precision + "- raté");
-                _this.message = _this.myAttackingPkm.pkm.nom + " rate sa cible!";
-                //--> Tour adverse
-            }
-            //this.isAttacking = false;
-            _this.attackPanel = false;
-            _this.imgEffetEnemy = "";
+            _this.resoudreAttaque(attack, _this.myAttackingPkm);
             //--> Tour adverse
             if (_this.estEnVie('bot') == true) {
                 _this.enemyTurn();
@@ -240,31 +231,19 @@ var CombatPage = /** @class */ (function () {
     };
     CombatPage.prototype.enemyTurn = function () {
         var _this = this;
-        var randomNb, randomNbAtk;
+        var randomNbAtk;
         var attack;
         setTimeout(function () {
-            if (_this.enemyAttackingPkm.pv.value > 0) {
+            if (_this.enemyAttackingPkm.pv.value > 0 && _this.isCaptured == false) {
                 //choisir un attaque au hasard
                 randomNbAtk = Math.floor(Math.random() * (4)) + 0;
                 attack = _this.enemyAttackingPkm.pkm.moveList[randomNbAtk];
                 _this.message = _this.enemyAttackingPkm.pkm.nom + " ennemi utilise " + attack.nom + " !";
                 _this.imgEffet = attack.img;
                 /*  	this.isAttacking = true;*/
-                randomNb = Math.floor((Math.random() * 100) + 1);
                 setTimeout(function () {
-                    if (randomNb <= attack.precision) {
-                        console.log(randomNb + "/" + attack.precision + "- reussi");
-                        _this.message = "C\'est très efficace!";
-                        _this.myAttackingPkm.pv.value = _this.myAttackingPkm.pv.value - attack.degats;
-                        //--> Tour adverse
-                    }
-                    else {
-                        console.log(randomNb + "/" + attack.precision + "- raté");
-                        _this.message = _this.enemyAttackingPkm.pkm.nom + " rate sa cible!";
-                        //--> Tour adverse
-                    }
+                    _this.resoudreAttaque(attack, _this.enemyAttackingPkm);
                     _this.isAttacking = false;
-                    _this.imgEffet = "";
                 }, 1000);
             }
             else {
@@ -290,7 +269,7 @@ var CombatPage = /** @class */ (function () {
                             }*/
                 this.message = this.myAttackingPkm.pkm.nom + " est KO!";
                 this.isAttacking = true;
-                if (estEnVie('joueur') == true) {
+                if (this.estEnVie('joueur') == true) {
                     setTimeout(function () {
                         _this.switchPkm('mort');
                     }, 1000);
@@ -300,7 +279,9 @@ var CombatPage = /** @class */ (function () {
                     setTimeout(function () {
                         _this.message = "Tous vos pokemons sont KO, retour au dernier centre Pkm.";
                         //Téléportation centre Pkm
-                        _this.navCtrl.push(VoyagePage);
+                        setTimeout(function () {
+                            _this.navCtrl.push(VoyagePage);
+                        }, 1000);
                     }, 2000);
                 }
             }
@@ -379,6 +360,85 @@ var CombatPage = /** @class */ (function () {
         }
         return estEnVie;
     };
+    CombatPage.prototype.resoudreAttaque = function (attack, attaquant) {
+        var _this = this;
+        var randomNb, randomNbEffet, coef, pkmAttaquant, pkmDefenseur;
+        pkmAttaquant = attaquant;
+        randomNb = Math.floor((Math.random() * 100) + 1);
+        randomNbEffet = Math.floor((Math.random() * 100) + 1);
+        if (pkmAttaquant == this.myAttackingPkm) {
+            pkmDefenseur = this.enemyAttackingPkm;
+        }
+        else {
+            pkmDefenseur = this.myAttackingPkm;
+        }
+        coef = this.getCoefTypeAttack(attack.type, pkmDefenseur.pkm.type1, pkmDefenseur.pkm.type2);
+        if (randomNb <= attack.precision) {
+            console.log(randomNb + "/" + attack.precision + "- reussi - " + attack.degats + "x" + coef + "degats.");
+            pkmDefenseur.pv.value = pkmDefenseur.pv.value - (attack.degats * coef);
+            if (attack.degats == 0) {
+                //Cas ou c'est une attaque a effet
+                this.message = pkmAttaquant.pkm.nom + " applique " + attack.effet;
+            }
+            else {
+                switch (coef) {
+                    case 0:
+                        this.message = "Aucun effet!";
+                        break;
+                    case 0.5:
+                        this.message = "Ce n\'est pas très efficace!";
+                        break;
+                    case 2:
+                        this.message = "C\'est très efficace!";
+                        break;
+                    default:
+                        this.message = pkmAttaquant.pkm.nom + " inflige " + attack.degats * coef + " de dégats";
+                        if (randomNbEffet <= 25) {
+                            setTimeout(function () {
+                                _this.message = pkmAttaquant.pkm.nom + " applique " + attack.effet;
+                            }, 2000);
+                        }
+                        break;
+                }
+            }
+        }
+        else {
+            console.log(randomNb + "/" + attack.precision + "- raté");
+            this.message = pkmAttaquant.pkm.nom + " rate sa cible!";
+        }
+        this.attackPanel = false;
+        if (pkmAttaquant == this.myAttackingPkm) {
+            this.imgEffetEnemy = "";
+        }
+        else {
+            this.imgEffet = "";
+        }
+    };
+    CombatPage.prototype.capture = function (pokeball, pokemon) {
+        var _this = this;
+        pokemon.statutPkm = 1;
+        var formule = (1 - (2 / 3 * pokemon.pv.value / pokemon.pv.max)) * pokemon.pkm.tauxCapture * pokeball.item.bonusBall * pokemon.statutPkm;
+        console.log("(1 - (2/3 x " + pokemon.pv.value + " / " + pokemon.pv.max + ")) x " + pokemon.pkm.tauxCapture + " x " + pokeball.item.bonusBall + " x " + pokemon.statutPkm + " = " + formule);
+        setTimeout(function () {
+            if (formule >= 150) {
+                _this.isCaptured = true;
+                _this.message = pokemon.pkm.nom + " est capturé!";
+                console.log("Pokémon capturé");
+                //Ajouter a l'équipe
+                for (var i = 0; i < 6; i++) {
+                    if ()
+                        ;
+                }
+                setTimeout(function () {
+                    _this.navCtrl.push(VoyagePage);
+                }, 2000);
+            }
+            else {
+                _this.message = "Ah, " + pokemon.pkm.nom + " s\'est échapé!";
+                console.log("Pokemon échappé");
+            }
+        }, 2000);
+    };
     CombatPage.prototype.creerEnemyTeam = function (typeCombat) {
         var _this = this;
         var randomNb, randomLvl;
@@ -387,7 +447,7 @@ var CombatPage = /** @class */ (function () {
             case "sauvage":
                 randomNb = Math.floor(Math.random() * this.pokemonList.length);
                 this.enemyPkmTeam[0].pkm = this.pokemonList[randomNb];
-                randomLvl = Math.floor((Math.random() * 5) + 1);
+                randomLvl = Math.floor((Math.random() * 3) + 1);
                 this.enemyPkmTeam[0].lvl = randomLvl;
                 this.enemyPkmTeam[0].pv = {};
                 this.enemyPkmTeam[0].pv.value = 100;
@@ -416,6 +476,354 @@ var CombatPage = /** @class */ (function () {
                 break;
         }
         this.enemyAttackingPkm = this.enemyPkmTeam[0];
+    };
+    CombatPage.prototype.getCoefTypeAttack = function (typeAttack, typePkm1, typePkm2) {
+        var coef = 1;
+        switch (typeAttack) {
+            case "Normal":
+                switch (typePkm1) {
+                    case "Roche":
+                        coef = 0.5;
+                        break;
+                    case "Spectre":
+                        coef = 0;
+                        break;
+                    case "Acier":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Feu":
+                switch (typePkm1) {
+                    case "Feu":
+                        coef = 0.5;
+                        break;
+                    case "Eau":
+                        coef = 0.5;
+                        break;
+                    case "Plante":
+                        coef = 2;
+                        break;
+                    case "Glace":
+                        coef = 2;
+                        break;
+                    case "Insecte":
+                        coef = 2;
+                        break;
+                    case "Roche":
+                        coef = 0.5;
+                        break;
+                    case "Dragon":
+                        coef = 0.5;
+                        break;
+                    case "Acier":
+                        coef = 2;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Eau":
+                switch (typePkm1) {
+                    case "Feu":
+                        coef = 2;
+                        break;
+                    case "Eau":
+                        coef = 0.5;
+                        break;
+                    case "Plante":
+                        coef = 0.5;
+                        break;
+                    case "Sol":
+                        coef = 2;
+                        break;
+                    case "Roche":
+                        coef = 2;
+                        break;
+                    case "Dragon":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Plante":
+                switch (typePkm1) {
+                    case "Feu":
+                        coef = 0.5;
+                        break;
+                    case "Eau":
+                        coef = 2;
+                        break;
+                    case "Plante":
+                        coef = 0.5;
+                        break;
+                    case "Poison":
+                        coef = 0.5;
+                        break;
+                    case "Sol":
+                        coef = 2;
+                        break;
+                    case "Vol":
+                        coef = 0.5;
+                        break;
+                    case "Insecte":
+                        coef = 0.5;
+                        break;
+                    case "Roche":
+                        coef = 2;
+                        break;
+                    case "Dragon":
+                        coef = 0.5;
+                        break;
+                    case "Acier":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Electrik":
+                switch (typePkm1) {
+                    case "Eau":
+                        coef = 2;
+                        break;
+                    case "Plante":
+                        coef = 0.5;
+                        break;
+                    case "Electrik":
+                        coef = 0.5;
+                        break;
+                    case "Sol":
+                        coef = 0;
+                        break;
+                    case "Vol":
+                        coef = 2;
+                        break;
+                    case "Dragon":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Glace":
+                switch (typePkm1) {
+                    case "Feu":
+                        coef = 0.5;
+                        break;
+                    case "Eau":
+                        coef = 0.5;
+                        break;
+                    case "Plante":
+                        coef = 2;
+                        break;
+                    case "Glace":
+                        coef = 0.5;
+                        break;
+                    case "Sol":
+                        coef = 2;
+                        break;
+                    case "Vol":
+                        coef = 2;
+                        break;
+                    case "Dragon":
+                        coef = 2;
+                        break;
+                    case "Acier":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Combat":
+                switch (typePkm1) {
+                    case "Normal":
+                        coef = 2;
+                        break;
+                    case "Glace":
+                        coef = 2;
+                        break;
+                    case "Poison":
+                        coef = 0.5;
+                        break;
+                    case "Vol":
+                        coef = 0.5;
+                        break;
+                    case "Psy":
+                        coef = 0.5;
+                        break;
+                    case "Insecte":
+                        coef = 0.5;
+                        break;
+                    case "Roche":
+                        coef = 2;
+                        break;
+                    case "Spectre":
+                        coef = 0;
+                        break;
+                    case "Ténèbres":
+                        coef = 2;
+                        break;
+                    case "Acier":
+                        coef = 2;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Poison":
+                switch (typePkm1) {
+                    case "Plante":
+                        coef = 2;
+                        break;
+                    case "Poison":
+                        coef = 0.5;
+                        break;
+                    case "Sol":
+                        coef = 0.5;
+                        break;
+                    case "Roche":
+                        coef = 0.5;
+                        break;
+                    case "Spectre":
+                        coef = 0.5;
+                        break;
+                    case "Acier":
+                        coef = 0;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Sol":
+                switch (typePkm1) {
+                    case "Feu":
+                        coef = 2;
+                        break;
+                    case "Plante":
+                        coef = 0.5;
+                        break;
+                    case "Electrik":
+                        coef = 2;
+                        break;
+                    case "Poison":
+                        coef = 2;
+                        break;
+                    case "Vol":
+                        coef = 0;
+                        break;
+                    case "Insecte":
+                        coef = 0.5;
+                        break;
+                    case "Roche":
+                        coef = 2;
+                        break;
+                    case "Acier":
+                        coef = 2;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Vol":
+                switch (typePkm1) {
+                    case "Plante":
+                        coef = 2;
+                        break;
+                    case "Electrik":
+                        coef = 0.5;
+                        break;
+                    case "Combat":
+                        coef = 2;
+                        break;
+                    case "Insecte":
+                        coef = 2;
+                        break;
+                    case "Roche":
+                        coef = 0.5;
+                        break;
+                    case "Acier":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Psy":
+                switch (typePkm1) {
+                    case "Combat":
+                        coef = 2;
+                        break;
+                    case "Poison":
+                        coef = 2;
+                        break;
+                    case "Psy":
+                        coef = 0.5;
+                        break;
+                    case "Ténèbres":
+                        coef = 0;
+                        break;
+                    case "Acier":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            case "Insecte":
+                switch (typePkm1) {
+                    case "Feu":
+                        coef = 0.5;
+                        break;
+                    case "Plante":
+                        coef = 2;
+                        break;
+                    case "Combat":
+                        coef = 0.5;
+                        break;
+                    case "Poison":
+                        coef = 0.5;
+                        break;
+                    case "Vol":
+                        coef = 0.5;
+                        break;
+                    case "Psy":
+                        coef = 2;
+                        break;
+                    case "Spectre":
+                        coef = 0.5;
+                        break;
+                    case "Ténèbres":
+                        coef = 2;
+                        break;
+                    case "Acier":
+                        coef = 0.5;
+                        break;
+                    default:
+                        coef = 1;
+                        break;
+                }
+                break;
+            default:
+                coef = 1;
+                break;
+        }
+        return coef;
     };
     CombatPage = __decorate([
         Component({

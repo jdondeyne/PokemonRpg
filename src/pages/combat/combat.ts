@@ -14,13 +14,14 @@ export class CombatPage {
   message: any;
   moveList: any;
   isAttacking: any;
+  isCaptured: any;
   imgEffet:any;
   imgEffetEnemy:any;
   typeCombat: any;
   idLieu: any;
 
   pokemonList: any = {};
-/*  itemList: any = {};*/
+  itemList: any = {};
 
   myPkmTeam: any = {};
   enemyPkmTeam: any = {};
@@ -34,6 +35,7 @@ export class CombatPage {
   	this.attackPanel = false;
   	this.message= "";
   	this.isAttacking = false;
+  	this.isCaptured = false;
   	this.imgEffet = "";
   	this.imgEffetEnemy = "";
   	this.myItemList = [];
@@ -59,10 +61,19 @@ export class CombatPage {
   		this.pokemonList = val;
   	});
 
+  	this.storage.get('itemList').then((val) => {
+  		this.itemList = val;
+  	});
+
   	this.storage.get('save.myPkmTeam').then((val) => {
   		this.myPkmTeam = val;
   		this.myAttackingPkm = this.myPkmTeam[0];
   		this.creerEnemyTeam(this.typeCombat);
+  	});
+
+  	this.storage.get('save.myItemList').then((val) => {
+  		this.myItemList = val;
+  		console.log(this.myItemList);
   	});
 
 
@@ -138,7 +149,7 @@ export class CombatPage {
       if(this.myItemList[i] != null){
 	      alert.addInput({
 	          type: 'radio',
-	          label: this.myItemList[i].nom + ' - x' + this.myItemList[i].quantite ,
+	          label: this.myItemList[i].item.nom + ' - x' + this.myItemList[i].quantite ,
 	          value: this.myItemList[i]
 	      });
 	      }
@@ -148,38 +159,35 @@ export class CombatPage {
     alert.addButton({
       text: 'Utiliser',
       handler: data => {
-      	if(data.enCombat == true){
-      		console.log('Objet utilisé:', data);
+      	if(data.enCombat == false){
+      		console.log('Objet hors combat:', data);
+    		this.message = data.nom + " doit être utilisé hors combat.";
+    	}else{
+    		console.log('Objet utilisé:', data);
+    		//MAJ quantité
+    		data.quantite = data.quantite - 1;
+    		this.storage.set('save.myItemList', this.myItemList);
 
-      		switch (data.nom) {
-	            case 'Potion':
-	            	this.message = "Vous utilisez " + data.nom + " sur " + this.myAttackingPkm.pkm.nom;
-	            	this.myAttackingPkm.pv.value = this.myAttackingPkm.pv.value + 40;
-	                break;
-	            case 'Pokeball':
-	            	if(this.typeCombat == "sauvage"){
-	            		this.message = "Vous utilisez " + data.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
-	            		data.quantite = data.quantite - 1;
-	            	}else{
-	            		this.message = "Vous ne pouvez pas capturer les pkm des autres dresseurs!";
-	            	}
-	                break;
-	            default:
-	            	console.log("Objet inconnu");
-	            	break;
-        	}
-
-/*      		if(data.surSoi == true){
-      			this.message = "Vous utilisez " + data.nom + " sur " + this.myAttackingPkm.pkm.nom;
+      		if(data.bonusBall != null || data.bonusBall != ""){
+      			//C'est une pokeball
+      			if(this.typeCombat == "sauvage"){
+            		this.message = "Vous utilisez " + data.item.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
+            		this.capture(data, this.enemyAttackingPkm);
+            	}else{
+            		this.message = "Vous ne pouvez pas capturer les pkm des autres dresseurs!";
+            	}
       		}else{
-				this.message = "Vous utilisez " + data.nom + " sur " + this.enemyAttackingPkm.pkm.nom;
-      		}*/
+      			if(data.pvRendus != null || data.pvRendus != "" ){
+      				//C'est une potion
+      				this.message = "Vous utilisez " + data.nom + " sur " + this.myAttackingPkm.pkm.nom;
+	            	this.myAttackingPkm.pv.value = this.myAttackingPkm.pv.value + data.pvRendus;
+	            	//TODO -> storage
+      			}
+      		}
+
       		if(this.estEnVie('bot') == true){
 	  			this.enemyTurn();
 	  		}
-    	}else{
-    		console.log('Objet hors combat:', data);
-    		this.message = data.nom + " doit être utilisé hors combat.";
     	}
       }
     });
@@ -256,7 +264,7 @@ export class CombatPage {
 	
 
 	setTimeout(() => {
-			if(this.enemyAttackingPkm.pv.value > 0){
+			if(this.enemyAttackingPkm.pv.value > 0 && this.isCaptured == false){
 			  	//choisir un attaque au hasard
 			  	randomNbAtk =Math.floor(Math.random() * (4)) + 0;
 			  	attack = this.enemyAttackingPkm.pkm.moveList[randomNbAtk];
@@ -306,7 +314,9 @@ export class CombatPage {
   				setTimeout(() => {
 	  				this.message = "Tous vos pokemons sont KO, retour au dernier centre Pkm.";
 	  				//Téléportation centre Pkm
-	  				this.navCtrl.push(VoyagePage);
+	  				setTimeout(() => {
+	  					this.navCtrl.push(VoyagePage);
+	  				}, 1000);
 	  			}, 2000);
   			}
 
@@ -403,12 +413,20 @@ export class CombatPage {
   	coef = this.getCoefTypeAttack(attack.type, pkmDefenseur.pkm.type1, pkmDefenseur.pkm.type2);
 
   	if(randomNb <= attack.precision){
-  		console.log(randomNb + "/" + attack.precision + "- reussi - " + attack.degats + "x" + coef + "degats.");
-  		pkmDefenseur.pv.value = pkmDefenseur.pv.value - (attack.degats * coef);
+  		//console.log(randomNb + "/" + attack.precision + "- reussi - " + attack.degats + "x" + coef + "degats.");
+  		console.log(randomNb + "/" + attack.precision + "- reussi");
+
+  		let formule = ((((pkmAttaquant.lvl * 0.4) + 2) * attack.degats / (pkmDefenseur.pkm.defenseBase)) + 2) * coef;
+  		formule = Math.round(formule);
+  		console.log("pvPerdus -> ((((" + pkmAttaquant.lvl + " x 0.4) + 2) x " + attack.degats + " / ( " + pkmDefenseur.pkm.defenseBase + " )) + 2) x " + coef + "= " + formule);
+
+  		
   		if(attack.degats == 0){
   			//Cas ou c'est une attaque a effet
   			this.message = pkmAttaquant.pkm.nom +  " applique " + attack.effet;
   		}else{
+  			pkmDefenseur.pv.value = pkmDefenseur.pv.value - formule;
+  			
   			switch (coef) {
   			case 0:
   				this.message = "Aucun effet!";
@@ -420,12 +438,12 @@ export class CombatPage {
   				this.message = "C\'est très efficace!";
   				break;
   			default:
-  				this.message = pkmAttaquant.pkm.nom + " inflige " + attack.degats*coef + " de dégats" ;
-  				if(randomNbEffet <= 25){
+  				this.message = pkmAttaquant.pkm.nom + " inflige " + formule + " de dégats!" ;
+/*  				if(randomNbEffet <= 25){
   					setTimeout(() => {
 						this.message = pkmAttaquant.pkm.nom +  " applique " + attack.effet;
 					}, 2000);
-  				}
+  				}*/
   				break;
   			}
   		}
@@ -442,6 +460,42 @@ export class CombatPage {
   		this.imgEffet = "";
   	}
 	  	
+  }
+
+
+  capture(pokeball, pokemon){
+
+  	pokemon.statutPkm = 1;
+
+  	let formule = (1 - (2/3 * pokemon.pv.value/pokemon.pv.max)) * pokemon.pkm.tauxCapture * pokeball.item.bonusBall * pokemon.statutPkm ;
+  	console.log("(1 - (2/3 x " + pokemon.pv.value + " / " + pokemon.pv.max + ")) x " + pokemon.pkm.tauxCapture +  " x " + pokeball.item.bonusBall +  " x " + pokemon.statutPkm + " = " + formule);
+
+  	setTimeout(() => {		
+	  	if(formule >= 150){
+	  		this.isCaptured = true;
+	  		this.message = pokemon.pkm.nom + " est capturé!";
+	  		console.log("Pokémon capturé");
+	  		//Ajouter a l'équipe
+	  		for(let i=1; i < 6; i++){
+	  			if(this.myPkmTeam[i] == null || this.myPkmTeam[i] == null){
+	  				this.myPkmTeam[i] = this.enemyAttackingPkm;
+	  				//storage
+	  				this.storage.set('save.myPkmTeam', this.myPkmTeam);
+	  				break;
+	  			}
+	  		}
+	  		
+	  		setTimeout(() => {
+				this.navCtrl.push(VoyagePage);
+			}, 2000);
+
+	  	}else{
+	  		this.message = "Ah, " + pokemon.pkm.nom + " s\'est échapé!"
+	  		console.log("Pokemon échappé");
+
+	  	}
+  	}, 2000);
+
   }
 
   creerEnemyTeam(typeCombat){
@@ -711,6 +765,118 @@ export class CombatPage {
 					break;
 				case "Acier":
 					coef = 0;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Sol":
+			switch(typePkm1){
+				case "Feu":
+					coef = 2;
+					break;
+				case "Plante":
+					coef = 0.5;
+					break;
+				case "Electrik":
+					coef = 2;
+					break;
+				case "Poison":
+					coef = 2;
+					break;
+				case "Vol":
+					coef = 0;
+					break;
+				case "Insecte":
+					coef = 0.5;
+					break;
+				case "Roche":
+					coef = 2;
+					break;
+				case "Acier":
+					coef = 2;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Vol":
+			switch(typePkm1){
+				case "Plante":
+					coef = 2;
+					break;
+				case "Electrik":
+					coef = 0.5;
+					break;
+				case "Combat":
+					coef = 2;
+					break;
+				case "Insecte":
+					coef = 2;
+					break;
+				case "Roche":
+					coef = 0.5;
+					break;
+				case "Acier":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Psy":
+			switch(typePkm1){
+				case "Combat":
+					coef = 2;
+					break;
+				case "Poison":
+					coef = 2;
+					break;
+				case "Psy":
+					coef = 0.5;
+					break;
+				case "Ténèbres":
+					coef = 0;
+					break;
+				case "Acier":
+					coef = 0.5;
+					break;
+				default:
+					coef = 1;
+					break;
+			}
+			break;
+		case "Insecte":
+			switch(typePkm1){
+				case "Feu":
+					coef = 0.5;
+					break;
+				case "Plante":
+					coef = 2;
+					break;
+				case "Combat":
+					coef = 0.5;
+					break;
+				case "Poison":
+					coef = 0.5;
+					break;
+				case "Vol":
+					coef = 0.5;
+					break;
+				case "Psy":
+					coef = 2;
+					break;
+				case "Spectre":
+					coef = 0.5;
+					break;
+				case "Ténèbres":
+					coef = 2;
+					break;
+				case "Acier":
+					coef = 0.5;
 					break;
 				default:
 					coef = 1;

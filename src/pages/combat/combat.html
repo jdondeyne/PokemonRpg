@@ -23,7 +23,7 @@
          <ion-col class="col" text-right>{{enemyAttackingPkm?.pv.value}}/{{enemyAttackingPkm?.pv.max}}</ion-col>
         </ion-row>
       <div text-center>
-        <img class="pokemon" src="assets/imgs/{{enemyAttackingPkm?.pkm.imgFront}}.png_"/>
+        <img class="pokemon" src="assets/imgs/{{enemyAttackingPkm?.pkm.imgFront}}.png"/>
         <img *ngIf="imgEffetEnemy != ''" class="effect" src="assets/imgs/{{imgEffetEnemy}}.gif"/>
       </div>
     </ion-col>
@@ -43,7 +43,7 @@
          <ion-col class="col" text-right>{{myAttackingPkm?.pv.value}}/{{myAttackingPkm?.pv.max}}</ion-col>
         </ion-row>
       <div text-center>
-        <img class="pokemon" src="assets/imgs/{{myAttackingPkm?.pkm.imgBack}}.png_" />
+        <img class="pokemon" src="assets/imgs/{{myAttackingPkm?.pkm.imgBack}}.png" />
         <img *ngIf="imgEffet != ''" class="effect" src="assets/imgs/{{imgEffet}}.gif"/>
       </div>
     </ion-col>
